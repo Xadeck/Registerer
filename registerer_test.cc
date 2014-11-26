@@ -1,3 +1,5 @@
+#include "gtest/gtest.h"
+
 #include <iostream>
 
 struct Point {
@@ -5,9 +7,8 @@ struct Point {
   int y;
 };
 
-int main(int,char**) {
-  Point p = {1,2};
-  std::cout << p.y << '\n';
+TEST(Point, creation) {
+  const Point p = {1,2};
   
-  return 0;
+  EXPECT_EQ(2, p.y);
 }
