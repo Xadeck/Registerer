@@ -1,5 +1,6 @@
 #include "registerer.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 class Vehicle {
 public:
@@ -8,25 +9,25 @@ public:
   virtual int nb_wheels() const = 0;
 };
 
-#define REGISTER_VEHICLE(KEY) REGISTER(Vehicle, KEY)
-
 class Car : public Vehicle {
 public:
-  REGISTER_VEHICLE("Car");
+  REGISTER(Vehicle, "Car", "Auto");
   
   int nb_wheels() const override { return 4; }  
 };
 
 class Moto : public Vehicle {
 public:
-  REGISTER_VEHICLE("Motorcycle");
+  REGISTER(Vehicle, "Motorcycle");
   
   int nb_wheels() const override { return 2; }  
 };
 
+using testing::UnorderedElementsAre;
+
 TEST(Vehicle, RegistrationNames) {
-  EXPECT_EQ("Car", Car::VehicleRegistrationName());
-  EXPECT_EQ("Motorcycle", Moto::VehicleRegistrationName());
+  EXPECT_THAT(Car::VehicleTrait::keys(), UnorderedElementsAre("Car", "Auto"));
+  EXPECT_THAT(Moto::VehicleTrait::keys(), UnorderedElementsAre("Motorcycle"));
 }
 
 TEST(Vehicle, CreatingCar) {

@@ -7,6 +7,7 @@
 #include <map>
 #include <functional>
 #include <type_traits>
+#include <vector>
 
 template <typename T>
 class Registry {
@@ -14,10 +15,14 @@ class Registry {
     typedef std::function<T*()> function_t;
     
     struct Registerer {
-      Registerer(const char* filename, int line, function_t function, const std::string& key) {
+      Registerer(const char* filename, int line,
+                 function_t function, 
+                const std::vector<std::string>& keys) {
         const Entry entry = { filename, line, function};
         registry_mutex_.lock();
-        registry_.emplace(key, entry);
+        for (const std::string& key : keys) {
+          registry_.emplace(key, entry);
+        }
         registry_mutex_.unlock();
       }
     };
@@ -56,16 +61,15 @@ struct TypeRegisterer {
 template <typename Trait, typename derived_type>
 typename Registry<typename Trait::base_type>::Registerer const TypeRegisterer<Trait, derived_type>::registerer(__FILE__, __LINE__,
   []() -> typename Trait::base_type* { return new derived_type; },
-  Trait::key());
+  Trait::keys());
 
-#define REGISTER(TYPE, KEY) \
+#define REGISTER(TYPE, KEYS...) \
   struct TYPE##Trait { \
     typedef TYPE base_type; \
-    static const char* key() { return KEY; } \
+    static std::vector<std::string> keys() { return { KEYS }; } \
   }; \
   const void* unused_##TYPE##_pointer() { \
     return &TypeRegisterer<TYPE##Trait, std::decay<decltype(*this)>::type>::registerer;\
-  } \
-  static const char* TYPE##RegistrationName() { return KEY; }
+  } 
 
 #endif // REGISTERER_H
