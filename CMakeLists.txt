@@ -1,8 +1,7 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 2.8)
 
-project (registerer)
-enable_language(CXX)
-
+project (registerer C CXX)
+find_package(Threads)
 ##################################
 # Download and install GMock
 
@@ -30,7 +29,9 @@ include_directories(${source_dir}/include)
 include_directories(${source_dir}/gtest/include)
 target_link_libraries(registerer_test ${binary_dir}/libgmock.a)
 target_link_libraries(registerer_test ${binary_dir}/libgmock_main.a)
+target_link_libraries(registerer_test -lpthread)
 
 enable_testing()
 add_test(NAME    registerer_test 
          COMMAND registerer_test)
+
