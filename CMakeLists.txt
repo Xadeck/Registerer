@@ -12,7 +12,6 @@ ExternalProject_Add(gmock
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
   INSTALL_COMMAND ""
 )
-ExternalProject_Get_Property(gmock source_dir binary_dir)
 
 add_executable(registerer_test registerer_test.cc)
 # TODO: the commands below should specify which features are needed
@@ -22,10 +21,10 @@ add_executable(registerer_test registerer_test.cc)
 #set_property(TARGET registerer_test PROPERTY CXX_STANDARD 11)
 #set_property(TARGET registerer_test PROPERTY CXX_STANDARD_REQUIRED ON)
 ADD_DEFINITIONS(
-    -std=c++11 # Or -std=c++0x
-    # Other flags
+    -std=c++11
 )
 
+ExternalProject_Get_Property(gmock source_dir binary_dir)
 add_dependencies(registerer_test gmock)
 include_directories(${source_dir}/include)
 include_directories(${source_dir}/gtest/include)
