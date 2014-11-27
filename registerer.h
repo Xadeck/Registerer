@@ -19,7 +19,7 @@ public:
       const Entry entry = {filename, line, function};
       registry_mutex_.lock();
       for (const std::string &key : keys) {
-        registry_.emplace(key, entry);
+        GetRegistry()->emplace(key, entry);
       }
       registry_mutex_.unlock();
     }
@@ -28,8 +28,8 @@ public:
   static std::unique_ptr<T> CreateByName(const std::string &key) {
     std::unique_ptr<T> result;
     registry_mutex_.lock();
-    auto entry_it = registry_.find(key);
-    if (entry_it != registry_.end()) {
+    auto entry_it = GetRegistry()->find(key);
+    if (entry_it != GetRegistry()->end()) {
       result.reset(entry_it->second.function());
     }
     registry_mutex_.unlock();
@@ -43,13 +43,13 @@ private:
     const function_t function;
   };
   static std::mutex registry_mutex_;
-  static std::map<std::string, Entry> registry_;
+  static std::map<std::string, Entry>* GetRegistry() {
+    static std::map<std::string, Entry> registry;
+    return &registry;
+  }
 };
 
 template <typename T> std::mutex Registry<T>::registry_mutex_;
-
-template <typename T>
-std::map<std::string, typename Registry<T>::Entry> Registry<T>::registry_;
 
 template <typename Trait, typename derived_type> struct TypeRegisterer {
   static const typename Registry<typename Trait::base_type>::Registerer
