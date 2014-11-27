@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.1)
 
 project (registerer)
+enable_language(CXX)
 
 ##################################
 # Download and install GoogleTest
@@ -19,6 +20,16 @@ ExternalProject_Add(gtest
 ExternalProject_Get_Property(gtest source_dir binary_dir)
 
 add_executable(registerer_test registerer_test.cc)
+# TODO: the commands below should specify which features are needed
+# but they fail on Mac so we use a hack to set a compiler flag.
+#target_compile_features(registerer_test PUBLIC x`)
+#target_compile_features(registerer_test PUBLIC cxx_lambdas)
+#set_property(TARGET registerer_test PROPERTY CXX_STANDARD 11)
+#set_property(TARGET registerer_test PROPERTY CXX_STANDARD_REQUIRED ON)
+ADD_DEFINITIONS(
+    -std=c++11 # Or -std=c++0x
+    # Other flags
+)
 
 add_dependencies(registerer_test gtest)
 include_directories(${source_dir}/include)
