@@ -5,22 +5,22 @@
 class Vehicle {
 public:
   virtual ~Vehicle() {}
-  
+
   virtual int nb_wheels() const = 0;
 };
 
 class Car : public Vehicle {
 public:
   REGISTER(Vehicle, "Car", "Auto");
-  
-  int nb_wheels() const override { return 4; }  
+
+  int nb_wheels() const override { return 4; }
 };
 
 class Moto : public Vehicle {
 public:
   REGISTER(Vehicle, "Motorcycle");
-  
-  int nb_wheels() const override { return 2; }  
+
+  int nb_wheels() const override { return 2; }
 };
 
 using testing::UnorderedElementsAre;
