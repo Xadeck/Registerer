@@ -6,17 +6,21 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <type_traits>
 
 template <typename T>
-class Registerer {
+class Registry {
   public:
     typedef std::function<T*()> function_t;
-    Registerer(const char* filename, int line, function_t function, const std::string& key) {
-      const Entry entry = { filename, line, function};
-      registry_mutex_.lock();
-      registry_.emplace(key, entry);
-      registry_mutex_.unlock();
-    }
+    
+    struct Registerer {
+      Registerer(const char* filename, int line, function_t function, const std::string& key) {
+        const Entry entry = { filename, line, function};
+        registry_mutex_.lock();
+        registry_.emplace(key, entry);
+        registry_mutex_.unlock();
+      }
+    };
     
     static std::unique_ptr<T> CreateByName(const std::string& key) {
       std::unique_ptr<T> result;
@@ -39,9 +43,29 @@ class Registerer {
 };
 
 template <typename T>
-std::mutex Registerer<T>::registry_mutex_;
+std::mutex Registry<T>::registry_mutex_;
 
 template <typename T>
-std::map<std::string, typename Registerer<T>::Entry> Registerer<T>::registry_;
+std::map<std::string, typename Registry<T>::Entry> Registry<T>::registry_;
+
+template <typename Trait, typename derived_type>
+struct TypeRegisterer {
+  static const typename Registry<typename Trait::base_type>::Registerer registerer;
+};
+
+template <typename Trait, typename derived_type>
+typename Registry<typename Trait::base_type>::Registerer const TypeRegisterer<Trait, derived_type>::registerer(__FILE__, __LINE__,
+  []() -> typename Trait::base_type* { return new derived_type; },
+  Trait::key());
+
+#define REGISTER(TYPE, KEY) \
+  struct TYPE##Trait { \
+    typedef TYPE base_type; \
+    static const char* key() { return KEY; } \
+  }; \
+  const void* unused_##TYPE##_pointer() { \
+    return &TypeRegisterer<TYPE##Trait, std::decay<decltype(*this)>::type>::registerer;\
+  } \
+  static const char* TYPE##RegistrationName() { return KEY; }
 
 #endif // REGISTERER_H

@@ -8,38 +8,40 @@ public:
   virtual int nb_wheels() const = 0;
 };
 
-// #define REGISTER(type) \
-//   Registerer<type>
-//
-// #define REGISTER_VEHICLE REGISTER(Vehicle)
-
-template <typename Trait, typename derived_type>
-struct AutoRegisterer {
-  static const Registerer<typename Trait::base_type> registerer;
-};
-
-template <typename Trait, typename derived_type>
-Registerer<typename Trait::base_type> const AutoRegisterer<Trait, derived_type>::registerer(__FILE__, __LINE__,
-  []() -> typename Trait::base_type* { return new derived_type; },
-  Trait::key());
+#define REGISTER_VEHICLE(KEY) REGISTER(Vehicle, KEY)
 
 class Car : public Vehicle {
 public:
-  struct VehicleTrait {
-    typedef Vehicle base_type;
-    static const char* key() { return "Car"; }
-  };
-  const void* unused_Vehicle_pointer() {
-    return &AutoRegisterer<VehicleTrait, Car>::registerer;
-  }
+  REGISTER_VEHICLE("Car");
   
   int nb_wheels() const override { return 4; }  
 };
 
+class Moto : public Vehicle {
+public:
+  REGISTER_VEHICLE("Motorcycle");
+  
+  int nb_wheels() const override { return 2; }  
+};
 
+TEST(Vehicle, RegistrationNames) {
+  EXPECT_EQ("Car", Car::VehicleRegistrationName());
+  EXPECT_EQ("Motorcycle", Moto::VehicleRegistrationName());
+}
 
-TEST(Point, creation) {
-  auto vehicle = Registerer<Vehicle>::CreateByName("Car");
+TEST(Vehicle, CreatingCar) {
+  auto vehicle = Registry<Vehicle>::CreateByName("Car");
   ASSERT_TRUE(vehicle.get());
   EXPECT_EQ(4, vehicle->nb_wheels());
+}
+
+TEST(Vehicle, CreatingMotorcycle) {
+  auto vehicle = Registry<Vehicle>::CreateByName("Motorcycle");
+  ASSERT_TRUE(vehicle.get());
+  EXPECT_EQ(2, vehicle->nb_wheels());
+}
+
+TEST(Vehicle, CreatingBoat) {
+  auto vehicle = Registry<Vehicle>::CreateByName("Boat");
+  ASSERT_FALSE(vehicle.get());
 }
