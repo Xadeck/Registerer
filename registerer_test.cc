@@ -2,47 +2,86 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-class Vehicle {
+namespace {
+class Engine {
 public:
-  virtual ~Vehicle() {}
+  virtual ~Engine() {}
 
-  virtual int nb_wheels() const = 0;
+  virtual float consumption() const = 0;
 };
 
-class Car : public Vehicle {
+class V4Engine : public Engine {
 public:
-  REGISTER(Vehicle, "Car", "Auto");
-
-  int nb_wheels() const override { return 4; }
+  REGISTER(Engine, "V4");
+  virtual float consumption() const { return 5.0; }
 };
 
-class Moto : public Vehicle {
+class V8Engine : public Engine {
 public:
-  REGISTER(Vehicle, "Motorcycle");
+  REGISTER(Engine, "V8", "Truck");
 
-  int nb_wheels() const override { return 2; }
+  virtual float consumption() const { return 15.0; }
 };
 
 using testing::UnorderedElementsAre;
 
 TEST(Vehicle, RegistrationNames) {
-  EXPECT_THAT(Car::VehicleTrait::keys(), UnorderedElementsAre("Car", "Auto"));
-  EXPECT_THAT(Moto::VehicleTrait::keys(), UnorderedElementsAre("Motorcycle"));
+  EXPECT_THAT(V4Engine::EngineTrait::keys(), UnorderedElementsAre("V4"));
+  EXPECT_THAT(V8Engine::EngineTrait::keys(),
+              UnorderedElementsAre("V8", "Truck"));
 }
 
-TEST(Vehicle, CreatingCar) {
-  auto vehicle = Registry<Vehicle>::CreateByName("Car");
-  ASSERT_TRUE(vehicle.get());
-  EXPECT_EQ(4, vehicle->nb_wheels());
+TEST(Vehicle, RegistrationNameWorks) {
+  auto engine = Registry<Engine>::CreateByName("V4");
+  ASSERT_TRUE(engine.get());
+  EXPECT_EQ(5, engine->consumption());
 }
 
-TEST(Vehicle, CreatingMotorcycle) {
-  auto vehicle = Registry<Vehicle>::CreateByName("Motorcycle");
-  ASSERT_TRUE(vehicle.get());
-  EXPECT_EQ(2, vehicle->nb_wheels());
+TEST(Vehicle, OtherRegistrationNameWorks) {
+  auto engine = Registry<Engine>::CreateByName("Truck");
+  ASSERT_TRUE(engine.get());
+  EXPECT_EQ(15, engine->consumption());
 }
 
-TEST(Vehicle, CreatingBoat) {
-  auto vehicle = Registry<Vehicle>::CreateByName("Boat");
-  ASSERT_FALSE(vehicle.get());
+TEST(Vehicle, UnknownRegistrationNameYieldsNull) {
+  auto engine = Registry<Engine>::CreateByName("V16");
+  ASSERT_FALSE(engine.get());
 }
+
+class Vehicle {
+public:
+  virtual ~Vehicle() {}
+
+  virtual const Engine &engine() const = 0;
+  virtual int tank_size() const = 0;
+
+  float autonomy() const { return tank_size() / engine().consumption(); }
+};
+
+class Car : public Vehicle {
+public:
+  REGISTER_1(Vehicle, Engine *, "Car");
+
+  explicit Car(Engine *engine) : engine_(engine) {}
+
+  const Engine &engine() const override { return *engine_; }
+  int tank_size() const override { return 60; }
+
+public:
+  Engine *const engine_;
+};
+
+class Truck : public Vehicle {
+public:
+  REGISTER_1(Vehicle, Engine *, "Truck");
+
+  explicit Truck(Engine *engine) : engine_(engine) {}
+
+  const Engine &engine() const override { return *engine_; }
+  int tank_size() const override { return 140; }
+
+public:
+  Engine *const engine_;
+};
+
+} // namespace
