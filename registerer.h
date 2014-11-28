@@ -1,3 +1,14 @@
+// Framework for performing registration of object factories.
+//
+// Limitations
+// -----------
+//  The code requires a C++11 compliant compiler.
+//
+//  The code relies on the a GNU preprocessor feature for variadic macros:
+//
+//    #define MACRO(x, opt...) call(x, ##opt)
+//
+// which extends to call(x) when opt is empty and call(x, ...) otherwise.
 #ifndef REGISTERER_H
 #define REGISTERER_H
 
@@ -48,10 +59,13 @@ public:
     return keys;
   }
 
-  typedef std::function<T *(Args...)> function_t;
+  //***************************************************************************
+  // Implementation details that can't be made private because used in macros
+  //***************************************************************************
+  typedef std::function<T *(Args...)> __function_t;
 
   struct __Registerer {
-    __Registerer(const char *location, function_t function,
+    __Registerer(const char *location, __function_t function,
                  const std::string &key) {
       const Entry entry = {location, function};
       registry_mutex_.lock();
@@ -63,13 +77,15 @@ public:
 private:
   struct Entry {
     const char *const location;
-    const function_t function;
+    const __function_t function;
   };
-  static std::mutex registry_mutex_;
+  // The registry is created on demand using a static variable inside a static
+  // method so that there is no order initialization fiasco.
   static std::map<std::string, Entry> *GetRegistry() {
     static std::map<std::string, Entry> registry;
     return &registry;
   }
+  static std::mutex registry_mutex_;
 };
 
 template <typename T, class... Args>
@@ -81,6 +97,14 @@ struct Type__Registerer {
                                  Args...>::__Registerer registerer;
 };
 
+//*****************************************************************************
+// Implementation details of REGISTER() macro.
+//
+// Creates uniquely named traits class and functions which forces the
+// instantiation of a class with a static member doing the actual registration
+// in the registry. Note that this class being a template, there is no violation
+// of the One Definition Rule.
+//*****************************************************************************
 template <typename Trait, typename derived_type, class... Args>
 typename Registry<typename Trait::base_type, Args...>::__Registerer const
     Type__Registerer<Trait, derived_type, Args...>::registerer(
