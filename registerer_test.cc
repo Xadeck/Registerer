@@ -1,6 +1,5 @@
 #include "registerer.h"
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
 namespace {
 class Engine {
@@ -22,8 +21,6 @@ public:
 
   virtual float consumption() const { return 15.0; }
 };
-
-using testing::UnorderedElementsAre;
 
 TEST(Engine, RegistrationNames) {
   EXPECT_EQ("V4", Registry<Engine>::GetKeyFor<V4Engine>());
