@@ -63,7 +63,7 @@ public:
 
 class Car : public Vehicle {
 public:
-  REGISTER_1("Car", Vehicle, Engine *);
+  REGISTER("Car", Vehicle, Engine *);
 
   explicit Car(Engine *engine) : engine_(engine) {}
 
@@ -76,7 +76,7 @@ public:
 
 class Truck : public Vehicle {
 public:
-  REGISTER_1("Truck", Vehicle, Engine*);
+  REGISTER("Truck", Vehicle, Engine *);
 
   explicit Truck(Engine *engine) : engine_(engine) {}
 
