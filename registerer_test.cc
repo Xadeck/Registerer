@@ -54,11 +54,13 @@ class Vehicle {
 public:
   virtual ~Vehicle() {}
 
-  virtual const Engine &engine() const = 0;
+  virtual const Engine *engine() const = 0;
 
   virtual int tank_size() const = 0;
 
-  float autonomy() const { return tank_size() / engine().consumption(); }
+  float autonomy() const {
+    return engine() ? tank_size() / engine()->consumption() : -1;
+  }
 };
 
 class Car : public Vehicle {
@@ -67,7 +69,7 @@ public:
 
   explicit Car(Engine *engine) : engine_(engine) {}
 
-  const Engine &engine() const override { return *engine_; }
+  const Engine *engine() const override { return engine_; }
   int tank_size() const override { return 60; }
 
 public:
@@ -80,7 +82,7 @@ public:
 
   explicit Truck(Engine *engine) : engine_(engine) {}
 
-  const Engine &engine() const override { return *engine_; }
+  const Engine *engine() const override { return engine_; }
   int tank_size() const override { return 140; }
 
 public:
@@ -98,5 +100,20 @@ TEST(Vehicle, RegistrationNameWorks) {
   ASSERT_TRUE(vehicle.get());
   EXPECT_EQ(12, vehicle->autonomy());
 }
+
+class Bicycle : public Vehicle {
+public:
+  REGISTER("Bicycle", Vehicle);
+  REGISTER("Bicycle", Vehicle, Engine *);
+
+  explicit Bicycle(Engine *engine=nullptr) : engine_(engine) {}
+
+  const Engine *engine() const override { return engine_; }
+  int tank_size() const override { return engine_ ? 10 : 0; }
+
+public:
+  Engine *const engine_;
+};
+
 
 } // namespace
