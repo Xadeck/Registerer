@@ -54,7 +54,8 @@ public:
     std::vector<std::string> keys;
     registry_mutex_.lock();
     for (const auto &iter : *GetRegistry()) {
-      keys.emplace_back(std::string(iter.second.location) + ": " + iter.first);
+      keys.emplace_back(std::string(iter.second.file) + ":" +
+                        std::string(iter.second.line) + ": " + iter.first);
     }
     registry_mutex_.unlock();
     return keys;
@@ -67,8 +68,8 @@ public:
 
   struct __Registerer {
     __Registerer(__function_t function, const std::string &key,
-                 const char *location) {
-      const Entry entry = {location, function};
+                 const char *file, const char *line) {
+      const Entry entry = {file, line, function};
       registry_mutex_.lock();
       GetRegistry()->emplace(key, entry);
       registry_mutex_.unlock();
@@ -77,7 +78,8 @@ public:
 
 private:
   struct Entry {
-    const char *const location;
+    const char *const file;
+    const char *const line;
     const __function_t function;
   };
   // The registry is created on demand using a static variable inside a static
@@ -116,22 +118,20 @@ typename Registry<base_type, Args...>::__Registerer const
     TypeRegisterer<Trait, base_type, derived_type,
                    Args...>::instance([](Args... args) -> base_type *
                                       { return new derived_type(args...); },
-                                      Trait::key(), Trait::location());
+                                      Trait::key(), Trait::file(),
+                                      Trait::line());
 
-#define CONCAT_STRINGS(x, y) x##y
+#define CONCAT_TOKENS(x, y) x##y
 #define STRINGIFY(x) #x
 
 #define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
-  struct CONCAT_STRINGS(__Trait, LINE) {                                       \
+  struct CONCAT_TOKENS(__Trait, LINE) {                                        \
     static const char *key() { return KEY; }                                   \
-    static const char *location() {                                            \
-      static const std::string l =                                             \
-          std::string(__FILE__) + ":" STRINGIFY(LINE);                         \
-      return l.c_str();                                                        \
-    }                                                                          \
+    static const char *file() { return __FILE__; }                             \
+    static const char *line() { return STRINGIFY(LINE); }                      \
   };                                                                           \
-  const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
-    return &::factory::TypeRegisterer<CONCAT_STRINGS(__Trait, LINE), TYPE,     \
+  const void *CONCAT_TOKENS(__unused, LINE)() const {                          \
+    return &::factory::TypeRegisterer<CONCAT_TOKENS(__Trait, LINE), TYPE,      \
                                       std::decay<decltype(*this)>::type,       \
                                       ##ARGS>::instance;                       \
   }                                                                            \
