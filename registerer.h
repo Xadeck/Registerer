@@ -99,7 +99,7 @@ typename Registry<typename Trait::base_type, Args...>::__Registerer const
           std::string(__FILE__) + ":" STRINGIFY(LINE);                         \
       return l.c_str();                                                        \
     }                                                                          \
-    static const char *key() { return {KEY}; }                                 \
+    static const char *key() { return KEY; }                                   \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
     return &Type__Registerer<CONCAT_STRINGS(__Trait, LINE),                    \
