@@ -28,11 +28,21 @@ public:
     return C::__key(std::function<void(const T *, Args...)>());
   }
 
+  static std::vector<std::string> GetKeys() {
+    std::vector<std::string> keys;
+    registry_mutex_.lock();
+    for (const auto &iter : *GetRegistry()) {
+      keys.emplace_back(iter.first);
+    }
+    registry_mutex_.unlock();
+    return keys;
+  }
+
   typedef std::function<T *(Args...)> function_t;
 
   struct __Registerer {
     __Registerer(const char *filename, int line, function_t function,
-               const std::string &key) {
+                 const std::string &key) {
       const Entry entry = {filename, line, function};
       registry_mutex_.lock();
       GetRegistry()->emplace(key, entry);
@@ -58,8 +68,8 @@ std::mutex Registry<T, Args...>::registry_mutex_;
 
 template <typename Trait, typename derived_type, class... Args>
 struct Type__Registerer {
-  static const typename Registry<typename Trait::base_type, Args...>::__Registerer
-      registerer;
+  static const typename Registry<typename Trait::base_type,
+                                 Args...>::__Registerer registerer;
 };
 
 template <typename Trait, typename derived_type, class... Args>
@@ -74,12 +84,12 @@ typename Registry<typename Trait::base_type, Args...>::__Registerer const
 #define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
   struct CONCAT_STRINGS(__Trait, LINE) {                                       \
     typedef TYPE base_type;                                                    \
-    static const char* key() { return {KEY}; }                   \
+    static const char *key() { return {KEY}; }                                 \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
-    return &Type__Registerer<CONCAT_STRINGS(__Trait, LINE),                      \
-                           std::decay<decltype(*this)>::type,                  \
-                           ##ARGS>::registerer;                                \
+    return &Type__Registerer<CONCAT_STRINGS(__Trait, LINE),                    \
+                             std::decay<decltype(*this)>::type,                \
+                             ##ARGS>::registerer;                              \
   }                                                                            \
   static const char *__key(std::function<void(TYPE *, ##ARGS)>) { return KEY; }
 

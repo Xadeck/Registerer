@@ -1,5 +1,9 @@
 #include "registerer.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
+using ::testing::ContainerEq;
+using ::testing::UnorderedElementsAre;
 
 namespace {
 class Engine {
@@ -22,11 +26,6 @@ public:
   virtual float consumption() const { return 15.0; }
 };
 
-TEST(Engine, RegistrationNames) {
-  EXPECT_EQ("V4", Registry<Engine>::GetKeyFor<V4Engine>());
-  EXPECT_EQ("V8", Registry<Engine>::GetKeyFor<V8Engine>());
-}
-
 TEST(Engine, RegistrationNameWorks) {
   auto engine = Registry<Engine>::CreateByName("V4");
   ASSERT_TRUE(engine.get());
@@ -42,6 +41,13 @@ TEST(Engine, OtherRegistrationNameWorks) {
 TEST(Engine, UnknownRegistrationNameYieldsNull) {
   auto engine = Registry<Engine>::CreateByName("V16");
   ASSERT_FALSE(engine.get());
+}
+
+TEST(Engine, RegistrationNames) {
+  EXPECT_EQ("V4", Registry<Engine>::GetKeyFor<V4Engine>());
+  EXPECT_EQ("V8", Registry<Engine>::GetKeyFor<V8Engine>());
+
+  EXPECT_THAT(Registry<Engine>::GetKeys(), UnorderedElementsAre("V4", "V8"));
 }
 
 class Vehicle {
@@ -83,11 +89,6 @@ public:
   Engine *const engine_;
 };
 
-TEST(Vehicle, RegistrationNames) {
-  EXPECT_EQ("Car", (Registry<Vehicle, Engine *>::GetKeyFor<Car>()));
-  EXPECT_EQ("Truck", (Registry<Vehicle, Engine *>::GetKeyFor<Truck>()));
-}
-
 TEST(Vehicle, RegistrationNameWorks) {
   auto engine = Registry<Engine>::CreateByName("V4");
   auto vehicle = Registry<Vehicle, Engine *>::CreateByName("Car", engine.get());
@@ -124,6 +125,14 @@ TEST(Vehicle, MultipleRegistrationWorks) {
 TEST(Vehicle, MultipleRegistrationsWorks) {
   EXPECT_EQ("Bicycle", (Registry<Vehicle>::GetKeyFor<Bicycle>()));
   EXPECT_EQ("Motorbike", (Registry<Vehicle, Engine *>::GetKeyFor<Bicycle>()));
+}
+
+TEST(Vehicle, RegistrationNames) {
+  EXPECT_EQ("Car", (Registry<Vehicle, Engine *>::GetKeyFor<Car>()));
+  EXPECT_EQ("Truck", (Registry<Vehicle, Engine *>::GetKeyFor<Truck>()));
+  EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeys()),
+              UnorderedElementsAre("Car", "Truck", "Motorbike"));
+  EXPECT_THAT(Registry<Vehicle>::GetKeys(), UnorderedElementsAre("Bicycle"));
 }
 
 } // namespace
