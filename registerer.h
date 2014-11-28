@@ -22,6 +22,7 @@
 
 #define REGISTER(KEY, TYPE, ARGS...) REGISTER_AT(__LINE__, KEY, TYPE, ##ARGS)
 
+namespace factory {
 template <typename T, class... Args> class Registry {
 public:
   static std::unique_ptr<T> New(const std::string &key, Args... args) {
@@ -65,8 +66,8 @@ public:
   typedef std::function<T *(Args...)> __function_t;
 
   struct __Registerer {
-    __Registerer(const char *location, __function_t function,
-                 const std::string &key) {
+    __Registerer(const std::string &key, __function_t function,
+                 const char *location) {
       const Entry entry = {location, function};
       registry_mutex_.lock();
       GetRegistry()->emplace(key, entry);
@@ -91,12 +92,6 @@ private:
 template <typename T, class... Args>
 std::mutex Registry<T, Args...>::registry_mutex_;
 
-template <typename Trait, typename derived_type, class... Args>
-struct Type__Registerer {
-  static const typename Registry<typename Trait::base_type,
-                                 Args...>::__Registerer registerer;
-};
-
 //*****************************************************************************
 // Implementation details of REGISTER() macro.
 //
@@ -106,11 +101,17 @@ struct Type__Registerer {
 // of the One Definition Rule.
 //*****************************************************************************
 template <typename Trait, typename derived_type, class... Args>
+struct TypeRegisterer {
+  static const typename Registry<typename Trait::base_type,
+                                 Args...>::__Registerer instance;
+};
+
+template <typename Trait, typename derived_type, class... Args>
 typename Registry<typename Trait::base_type, Args...>::__Registerer const
-    Type__Registerer<Trait, derived_type, Args...>::registerer(
-        Trait::location(), [](Args... args) -> typename Trait::base_type *
+    TypeRegisterer<Trait, derived_type, Args...>::instance(
+        Trait::key(), [](Args... args) -> typename Trait::base_type *
                            { return new derived_type(args...); },
-        Trait::key());
+        Trait::location());
 
 #define CONCAT_STRINGS(x, y) x##y
 #define STRINGIFY(x) #x
@@ -126,10 +127,12 @@ typename Registry<typename Trait::base_type, Args...>::__Registerer const
     static const char *key() { return KEY; }                                   \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
-    return &Type__Registerer<CONCAT_STRINGS(__Trait, LINE),                    \
-                             std::decay<decltype(*this)>::type,                \
-                             ##ARGS>::registerer;                              \
+    return &::factory::TypeRegisterer<CONCAT_STRINGS(__Trait, LINE),           \
+                                      std::decay<decltype(*this)>::type,       \
+                                      ##ARGS>::instance;                       \
   }                                                                            \
   static const char *__key(std::function<void(TYPE *, ##ARGS)>) { return KEY; }
+
+} // namespace factory
 
 #endif // REGISTERER_H

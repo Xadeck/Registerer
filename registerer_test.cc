@@ -5,6 +5,10 @@
 using ::testing::ContainerEq;
 using ::testing::UnorderedElementsAre;
 
+using ::factory::Registry;
+
+// Use a namespace to check that macros work inside another namespace.
+namespace test {
 namespace {
 //*****************************************************************************
 // Test the simple case of objects with constructors taking no parameters
@@ -54,7 +58,7 @@ TEST(Engine, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT(
       Registry<Engine>::GetKeysWithLocations(),
-      UnorderedElementsAre(this_file + ":21: V4", this_file + ":27: V8"));
+      UnorderedElementsAre(this_file + ":25: V4", this_file + ":31: V8"));
 }
 
 //*****************************************************************************
@@ -149,11 +153,11 @@ TEST(Vehicle, GetKeysWorks) {
 TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":79: Car",
-                                   this_file + ":92: Truck",
-                                   this_file + ":106: Motorbike"));
+              UnorderedElementsAre(this_file + ":83: Car",
+                                   this_file + ":96: Truck",
+                                   this_file + ":110: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
-              UnorderedElementsAre(this_file + ":105: Bicycle"));
+              UnorderedElementsAre(this_file + ":109: Bicycle"));
 }
-
+} // namespace test
 } // namespace
