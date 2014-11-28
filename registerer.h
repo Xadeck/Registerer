@@ -65,17 +65,17 @@ TypeRegisterer<Trait, derived_type, Args...>::registerer(
   return new derived_type(args...);
 }, Trait::keys());
 
-#define REGISTER(TYPE, KEYS...)                                                \
-  struct TYPE##Trait {                                                         \
-    typedef TYPE base_type;                                                    \
-    static std::vector<std::string> keys() { return {KEYS}; }                  \
-  };                                                                           \
-  const void *unused_##TYPE##_pointer() {                                      \
-    return &TypeRegisterer<TYPE##Trait,                                        \
-                           std::decay<decltype(*this)>::type>::registerer;     \
+#define REGISTER(KEYS, TYPE)                                               \
+  struct TYPE##Trait {                                                     \
+    typedef TYPE base_type;                                                \
+    static std::vector<std::string> keys() { return {KEYS}; }              \
+  };                                                                       \
+  const void *unused_##TYPE##_pointer() {                                  \
+    return &TypeRegisterer<TYPE##Trait,                                    \
+                           std::decay<decltype(*this)>::type>::registerer; \
   }
 
-#define REGISTER_1(TYPE, ARG0, KEYS...)                                        \
+#define REGISTER_1(KEYS, TYPE, ARG0)                            \
   struct TYPE##Trait {                                                         \
     typedef TYPE base_type;                                                    \
     static std::vector<std::string> keys() { return {KEYS}; }                  \

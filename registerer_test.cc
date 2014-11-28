@@ -12,13 +12,15 @@ public:
 
 class V4Engine : public Engine {
 public:
-  REGISTER(Engine, "V4");
+  REGISTER("V4", Engine);
   virtual float consumption() const { return 5.0; }
 };
 
+#define NAMES(...) __VA_ARGS__
+
 class V8Engine : public Engine {
 public:
-  REGISTER(Engine, "V8", "Truck");
+  REGISTER(NAMES("V8", "Truck"), Engine);
 
   virtual float consumption() const { return 15.0; }
 };
@@ -53,6 +55,7 @@ public:
   virtual ~Vehicle() {}
 
   virtual const Engine &engine() const = 0;
+
   virtual int tank_size() const = 0;
 
   float autonomy() const { return tank_size() / engine().consumption(); }
@@ -60,7 +63,7 @@ public:
 
 class Car : public Vehicle {
 public:
-  REGISTER_1(Vehicle, Engine *, "Car");
+  REGISTER_1("Car", Vehicle, Engine *);
 
   explicit Car(Engine *engine) : engine_(engine) {}
 
@@ -73,7 +76,7 @@ public:
 
 class Truck : public Vehicle {
 public:
-  REGISTER_1(Vehicle, Engine *, "Truck");
+  REGISTER_1("Truck", Vehicle, Engine*);
 
   explicit Truck(Engine *engine) : engine_(engine) {}
 
