@@ -66,7 +66,7 @@ public:
   typedef std::function<T *(Args...)> __function_t;
 
   struct __Registerer {
-    __Registerer(const std::string &key, __function_t function,
+    __Registerer(__function_t function, const std::string &key,
                  const char *location) {
       const Entry entry = {location, function};
       registry_mutex_.lock();
@@ -96,38 +96,42 @@ std::mutex Registry<T, Args...>::registry_mutex_;
 // Implementation details of REGISTER() macro.
 //
 // Creates uniquely named traits class and functions which forces the
-// instantiation of a class with a static member doing the actual registration
-// in the registry. Note that this class being a template, there is no violation
-// of the One Definition Rule.
+// instantiation of a TypeRegisterer class with a static member doing the
+// actual registration in the registry. Note that TypeRegisterer being a
+// template, there is no violation of the One Definition Rule. The use of
+// Trait class is way to pass back information from the class where the
+// macro is called, to the definition of TypeRegisterer static member.
+// This works only because the Trait functions do not reference any other
+// static variable, or it would create an initialization order fiasco.
 //*****************************************************************************
-template <typename Trait, typename derived_type, class... Args>
+template <typename Trait, typename base_type, typename derived_type,
+          class... Args>
 struct TypeRegisterer {
-  static const typename Registry<typename Trait::base_type,
-                                 Args...>::__Registerer instance;
+  static const typename Registry<base_type, Args...>::__Registerer instance;
 };
 
-template <typename Trait, typename derived_type, class... Args>
-typename Registry<typename Trait::base_type, Args...>::__Registerer const
-    TypeRegisterer<Trait, derived_type, Args...>::instance(
-        Trait::key(), [](Args... args) -> typename Trait::base_type *
-                           { return new derived_type(args...); },
-        Trait::location());
+template <typename Trait, typename base_type, typename derived_type,
+          class... Args>
+typename Registry<base_type, Args...>::__Registerer const
+    TypeRegisterer<Trait, base_type, derived_type,
+                   Args...>::instance([](Args... args) -> base_type *
+                                      { return new derived_type(args...); },
+                                      Trait::key(), Trait::location());
 
 #define CONCAT_STRINGS(x, y) x##y
 #define STRINGIFY(x) #x
 
 #define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
   struct CONCAT_STRINGS(__Trait, LINE) {                                       \
-    typedef TYPE base_type;                                                    \
+    static const char *key() { return KEY; }                                   \
     static const char *location() {                                            \
       static const std::string l =                                             \
           std::string(__FILE__) + ":" STRINGIFY(LINE);                         \
       return l.c_str();                                                        \
     }                                                                          \
-    static const char *key() { return KEY; }                                   \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
-    return &::factory::TypeRegisterer<CONCAT_STRINGS(__Trait, LINE),           \
+    return &::factory::TypeRegisterer<CONCAT_STRINGS(__Trait, LINE), TYPE,     \
                                       std::decay<decltype(*this)>::type,       \
                                       ##ARGS>::instance;                       \
   }                                                                            \
