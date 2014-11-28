@@ -13,7 +13,7 @@
 
 template <typename T, class... Args> class Registry {
 public:
-  static std::unique_ptr<T> CreateByName(const std::string &key, Args... args) {
+  static std::unique_ptr<T> New(const std::string &key, Args... args) {
     std::unique_ptr<T> result;
     registry_mutex_.lock();
     auto entry_it = GetRegistry()->find(key);

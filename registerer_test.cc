@@ -6,6 +6,9 @@ using ::testing::ContainerEq;
 using ::testing::UnorderedElementsAre;
 
 namespace {
+//*****************************************************************************
+// Test the simple case of objects with constructors taking no parameters
+//*****************************************************************************
 class Engine {
 public:
   virtual ~Engine() {}
@@ -26,40 +29,44 @@ public:
   virtual float consumption() const { return 15.0; }
 };
 
-TEST(Engine, RegistrationNameWorks) {
-  auto engine = Registry<Engine>::CreateByName("V4");
+TEST(Engine, KnownKeysYieldTheRightObjects) {
+  auto engine = Registry<Engine>::New("V4");
   ASSERT_TRUE(engine.get());
   EXPECT_EQ(5, engine->consumption());
+
+  auto other_engine = Registry<Engine>::New("V8");
+  ASSERT_TRUE(other_engine.get());
+  EXPECT_EQ(15, other_engine->consumption());
 }
 
-TEST(Engine, OtherRegistrationNameWorks) {
-  auto engine = Registry<Engine>::CreateByName("V8");
-  ASSERT_TRUE(engine.get());
-  EXPECT_EQ(15, engine->consumption());
-}
-
-TEST(Engine, UnknownRegistrationNameYieldsNull) {
-  auto engine = Registry<Engine>::CreateByName("V16");
+TEST(Engine, UnknownKeyYieldsNull) {
+  auto engine = Registry<Engine>::New("V16");
   ASSERT_FALSE(engine.get());
 }
 
-TEST(Engine, RegistrationNames) {
+TEST(Engine, GetKeysWorks) {
   EXPECT_EQ("V4", Registry<Engine>::GetKeyFor<V4Engine>());
   EXPECT_EQ("V8", Registry<Engine>::GetKeyFor<V8Engine>());
+}
 
+TEST(Engine, GetKeysWithLocationsWorks) {
   EXPECT_THAT(Registry<Engine>::GetKeys(), UnorderedElementsAre("V4", "V8"));
   static const std::string this_file(__FILE__);
   EXPECT_THAT(
       Registry<Engine>::GetKeysWithLocations(),
-      UnorderedElementsAre(this_file + ":18: V4", this_file + ":24: V8"));
+      UnorderedElementsAre(this_file + ":21: V4", this_file + ":27: V8"));
 }
 
+//*****************************************************************************
+// Test advanced cases:
+//  - base class takes a parameter (a vehicle receives an engine)
+//  - subclass registered via multiple signatures
+//*****************************************************************************
 class Vehicle {
 public:
   virtual ~Vehicle() {}
 
   virtual const Engine *engine() const = 0;
-
   virtual int tank_size() const = 0;
 
   float autonomy() const {
@@ -76,7 +83,7 @@ public:
   const Engine *engine() const override { return engine_; }
   int tank_size() const override { return 60; }
 
-public:
+private:
   Engine *const engine_;
 };
 
@@ -89,16 +96,9 @@ public:
   const Engine *engine() const override { return engine_; }
   int tank_size() const override { return 140; }
 
-public:
+private:
   Engine *const engine_;
 };
-
-TEST(Vehicle, RegistrationNameWorks) {
-  auto engine = Registry<Engine>::CreateByName("V4");
-  auto vehicle = Registry<Vehicle, Engine *>::CreateByName("Car", engine.get());
-  ASSERT_TRUE(vehicle.get());
-  EXPECT_EQ(60, vehicle->tank_size());
-}
 
 class Bicycle : public Vehicle {
 public:
@@ -114,34 +114,43 @@ public:
   Engine *const engine_;
 };
 
-TEST(Vehicle, MultipleRegistrationWorks) {
-  auto vehicle1 = Registry<Vehicle>::CreateByName("Bicycle");
-  ASSERT_TRUE(vehicle1.get());
-  EXPECT_EQ(0, vehicle1->tank_size());
-
-  auto engine = Registry<Engine>::CreateByName("V4");
-  auto vehicle2 =
-      Registry<Vehicle, Engine *>::CreateByName("Motorbike", engine.get());
-  ASSERT_TRUE(vehicle2.get());
-  EXPECT_EQ(10, vehicle2->tank_size());
+TEST(Vehicle, KnownKeysYieldTheRightObjects) {
+  auto engine = Registry<Engine>::New("V4");
+  auto vehicle = Registry<Vehicle, Engine *>::New("Car", engine.get());
+  ASSERT_TRUE(vehicle.get());
+  EXPECT_EQ(60, vehicle->tank_size());
 }
 
-TEST(Vehicle, MultipleRegistrationsWorks) {
+TEST(Vehicle, ObjectsCanBeInstantiatedViaMultipleRegistration) {
+  auto vehicle = Registry<Vehicle>::New("Bicycle");
+  ASSERT_TRUE(vehicle.get());
+  EXPECT_EQ(0, vehicle->tank_size());
+
+  auto engine = Registry<Engine>::New("V4");
+  auto other_vehicle =
+      Registry<Vehicle, Engine *>::New("Motorbike", engine.get());
+  ASSERT_TRUE(other_vehicle.get());
+  EXPECT_EQ(10, other_vehicle->tank_size());
+}
+
+TEST(Vehicle, MixedRegistrationAreSupported) {
   EXPECT_EQ("Bicycle", (Registry<Vehicle>::GetKeyFor<Bicycle>()));
   EXPECT_EQ("Motorbike", (Registry<Vehicle, Engine *>::GetKeyFor<Bicycle>()));
 }
 
-TEST(Vehicle, RegistrationNames) {
+TEST(Vehicle, GetKeysWorks) {
   EXPECT_EQ("Car", (Registry<Vehicle, Engine *>::GetKeyFor<Car>()));
   EXPECT_EQ("Truck", (Registry<Vehicle, Engine *>::GetKeyFor<Truck>()));
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeys()),
               UnorderedElementsAre("Car", "Truck", "Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeys(), UnorderedElementsAre("Bicycle"));
+}
 
+TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":72: Car",
-                                   this_file + ":85: Truck",
+              UnorderedElementsAre(this_file + ":79: Car",
+                                   this_file + ":92: Truck",
                                    this_file + ":106: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
               UnorderedElementsAre(this_file + ":105: Bicycle"));
