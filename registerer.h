@@ -38,12 +38,22 @@ public:
     return keys;
   }
 
+  static std::vector<std::string> GetKeysWithLocations() {
+    std::vector<std::string> keys;
+    registry_mutex_.lock();
+    for (const auto &iter : *GetRegistry()) {
+      keys.emplace_back(std::string(iter.second.location) + ": " + iter.first);
+    }
+    registry_mutex_.unlock();
+    return keys;
+  }
+
   typedef std::function<T *(Args...)> function_t;
 
   struct __Registerer {
-    __Registerer(const char *filename, int line, function_t function,
+    __Registerer(const char *location, function_t function,
                  const std::string &key) {
-      const Entry entry = {filename, line, function};
+      const Entry entry = {location, function};
       registry_mutex_.lock();
       GetRegistry()->emplace(key, entry);
       registry_mutex_.unlock();
@@ -52,8 +62,7 @@ public:
 
 private:
   struct Entry {
-    const char *const filename;
-    const int line;
+    const char *const location;
     const function_t function;
   };
   static std::mutex registry_mutex_;
@@ -75,15 +84,21 @@ struct Type__Registerer {
 template <typename Trait, typename derived_type, class... Args>
 typename Registry<typename Trait::base_type, Args...>::__Registerer const
     Type__Registerer<Trait, derived_type, Args...>::registerer(
-        __FILE__, __LINE__, [](Args... args) -> typename Trait::base_type *
-                            { return new derived_type(args...); },
+        Trait::location(), [](Args... args) -> typename Trait::base_type *
+                           { return new derived_type(args...); },
         Trait::key());
 
 #define CONCAT_STRINGS(x, y) x##y
+#define STRINGIFY(x) #x
 
 #define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
   struct CONCAT_STRINGS(__Trait, LINE) {                                       \
     typedef TYPE base_type;                                                    \
+    static const char *location() {                                            \
+      static const std::string l =                                             \
+          std::string(__FILE__) + ":" STRINGIFY(LINE);                         \
+      return l.c_str();                                                        \
+    }                                                                          \
     static const char *key() { return {KEY}; }                                 \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \

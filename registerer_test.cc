@@ -48,6 +48,10 @@ TEST(Engine, RegistrationNames) {
   EXPECT_EQ("V8", Registry<Engine>::GetKeyFor<V8Engine>());
 
   EXPECT_THAT(Registry<Engine>::GetKeys(), UnorderedElementsAre("V4", "V8"));
+  static const std::string this_file(__FILE__);
+  EXPECT_THAT(
+      Registry<Engine>::GetKeysWithLocations(),
+      UnorderedElementsAre(this_file + ":18: V4", this_file + ":24: V8"));
 }
 
 class Vehicle {
@@ -133,6 +137,14 @@ TEST(Vehicle, RegistrationNames) {
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeys()),
               UnorderedElementsAre("Car", "Truck", "Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeys(), UnorderedElementsAre("Bicycle"));
+
+  static const std::string this_file(__FILE__);
+  EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
+              UnorderedElementsAre(this_file + ":72: Car",
+                                   this_file + ":85: Truck",
+                                   this_file + ":106: Motorbike"));
+  EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
+              UnorderedElementsAre(this_file + ":105: Bicycle"));
 }
 
 } // namespace
