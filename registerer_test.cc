@@ -27,25 +27,25 @@ public:
 
 using testing::UnorderedElementsAre;
 
-TEST(Vehicle, RegistrationNames) {
+TEST(Engine, RegistrationNames) {
   EXPECT_THAT(V4Engine::EngineTrait::keys(), UnorderedElementsAre("V4"));
   EXPECT_THAT(V8Engine::EngineTrait::keys(),
               UnorderedElementsAre("V8", "Truck"));
 }
 
-TEST(Vehicle, RegistrationNameWorks) {
+TEST(Engine, RegistrationNameWorks) {
   auto engine = Registry<Engine>::CreateByName("V4");
   ASSERT_TRUE(engine.get());
   EXPECT_EQ(5, engine->consumption());
 }
 
-TEST(Vehicle, OtherRegistrationNameWorks) {
+TEST(Engine, OtherRegistrationNameWorks) {
   auto engine = Registry<Engine>::CreateByName("Truck");
   ASSERT_TRUE(engine.get());
   EXPECT_EQ(15, engine->consumption());
 }
 
-TEST(Vehicle, UnknownRegistrationNameYieldsNull) {
+TEST(Engine, UnknownRegistrationNameYieldsNull) {
   auto engine = Registry<Engine>::CreateByName("V16");
   ASSERT_FALSE(engine.get());
 }
@@ -86,5 +86,17 @@ public:
 public:
   Engine *const engine_;
 };
+
+TEST(Vehicle, RegistrationNames) {
+  EXPECT_THAT(Car::VehicleTrait::keys(), UnorderedElementsAre("Car"));
+  EXPECT_THAT(Truck::VehicleTrait::keys(), UnorderedElementsAre("Truck"));
+}
+
+TEST(Vehicle, RegistrationNameWorks) {
+  auto engine = Registry<Engine>::CreateByName("V4");
+  auto vehicle = Registry<Vehicle, Engine *>::CreateByName("Car", engine.get());
+  ASSERT_TRUE(vehicle.get());
+  EXPECT_EQ(12, vehicle->autonomy());
+}
 
 } // namespace
