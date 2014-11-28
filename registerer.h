@@ -60,19 +60,24 @@ struct TypeRegisterer {
 
 template <typename Trait, typename derived_type, class... Args>
 typename Registry<typename Trait::base_type, Args...>::Registerer const
-TypeRegisterer<Trait, derived_type, Args...>::registerer(
-    __FILE__, __LINE__, [](Args... args) -> typename Trait::base_type *{
-  return new derived_type(args...);
-}, Trait::keys());
+    TypeRegisterer<Trait, derived_type, Args...>::registerer(
+        __FILE__, __LINE__, [](Args... args) -> typename Trait::base_type *
+                            { return new derived_type(args...); },
+        Trait::keys());
 
-#define REGISTER(KEYS, TYPE, ARGS...)                                          \
-  struct TYPE##Trait {                                                         \
+#define CONCAT_STRINGS(x, y) x##y
+
+#define REGISTER_AT(LINE, KEYS, TYPE, ARGS...)                                 \
+  struct CONCAT_STRINGS(__Trait, LINE) {                                       \
     typedef TYPE base_type;                                                    \
     static std::vector<std::string> keys() { return {KEYS}; }                  \
   };                                                                           \
-  const void *unused_##TYPE##_pointer() {                                      \
-    return &TypeRegisterer<TYPE##Trait, std::decay<decltype(*this)>::type,     \
+  const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
+    return &TypeRegisterer<CONCAT_STRINGS(__Trait, LINE),                      \
+                           std::decay<decltype(*this)>::type,                  \
                            ##ARGS>::registerer;                                \
   }
+
+#define REGISTER(KEYS, TYPE, ARGS...) REGISTER_AT(__LINE__, KEYS, TYPE, ##ARGS)
 
 #endif // REGISTERER_H
