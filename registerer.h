@@ -1,5 +1,69 @@
 // Framework for performing registration of object factories.
 //
+// The major points of the framework:
+//  - no need to declare registration ahead on the base class,
+//    which means this file need to be included only in files
+//    declaring subclasses that *do* register themselves.
+//  - registration is done via a macro called inside the declaration
+//    of the class, which reduces boilerplate code, and incidentally makes
+//    the registration name available to the class.
+//  - macro supports constructors with arbitrary number of arguments,
+//    all implemented in a single macro
+//  - class can be registered for different constructors, making
+//    it easy to implement logic that try to instantiate an object
+//    from different parameters.
+//  - easy injection to override registered class with mock classes.
+//
+// Basic usage
+// -----------
+// Given an interface:
+//
+//    class Shape {
+//      public:
+//       virtual ~Shape() {}
+//       virtual void Draw() const = 0;
+//    }
+//
+// The framework allows to annotate with REGISTER macro any subclass:
+//
+//    class Circle : public Shape {
+//      public:
+//       REGISTER("Circle", Shape);
+//       void Draw() const override { ... }
+//    }
+//
+// The first parameter of the macro can be any string and does not have to
+// match the name of the class:
+//
+//    class Rect : public Shape {
+//      public:
+//       REGISTER("Rectangle", Shape);
+//       void Draw() const override { ... }
+//    }
+//
+// With the annotation, a Shape instance can be created from a string:
+//
+//    std::unique_ptr<Shape> shape = Registry<Shape>::New("Rect");
+//    shape->Draw();  // will draw a rectangle!
+//
+// The function returns a unique_ptr which makes ownership clear and simple.
+// If no class is registered, it will return a null unique_ptr. In order to
+// check if New() would succeed without actually creating an instance, use
+// the CanNew() predicate.
+//
+// Advanced usage
+// --------------
+//
+// Show that objects can register arbitrary constructors, and that the
+// instantiation code can actually dispatch amongst different constructors.
+//
+// Testing
+// -------
+//
+//
+// Goodies
+// -------
+//
 // Limitations
 // -----------
 // The code requires a C++11 compliant compiler.
@@ -29,17 +93,15 @@
 namespace factory {
 template <typename T, class... Args> class Registry {
 public:
+  static bool CanNew(const std::string &key, Args... args) {
+    return GetEntry(key, args...).first;
+  }
+
   static std::unique_ptr<T> New(const std::string &key, Args... args) {
     std::unique_ptr<T> result;
-    registry_mutex_.lock();
-    auto it = GetInjectors()->find(key);
-    bool found = (it != GetInjectors()->end());
-    if (!found) {
-      it = GetRegistry()->find(key);
-      found = (it != GetRegistry()->end());
-    }
-    if (found) {
-      result.reset(it->second.function(args...));
+    auto entry = GetEntry(key, args...);
+    if (entry.first) {
+      result.reset(entry.second->function(args...));
     }
     registry_mutex_.unlock();
     return std::move(result);
@@ -108,17 +170,31 @@ private:
     const char *const line;
     const __function_t function;
   };
+  typedef std::map<std::string, Entry> EntryMap;
   // The registry is created on demand using a static variable inside a static
   // method so that there is no order initialization fiasco.
-  static std::map<std::string, Entry> *GetRegistry() {
-    static std::map<std::string, Entry> registry;
+  static EntryMap *GetRegistry() {
+    static EntryMap registry;
     return &registry;
   }
-  static std::mutex registry_mutex_;
-  static std::map<std::string, Entry> *GetInjectors() {
-    static std::map<std::string, Entry> injectors;
+  static EntryMap *GetInjectors() {
+    static EntryMap injectors;
     return &injectors;
   };
+  static std::mutex registry_mutex_;
+
+  static std::pair<bool, const Entry *> GetEntry(const std::string &key,
+                                                 Args... args) {
+    registry_mutex_.lock();
+    auto it = GetInjectors()->find(key);
+    bool found = (it != GetInjectors()->end());
+    if (!found) {
+      it = GetRegistry()->find(key);
+      found = (it != GetRegistry()->end());
+    }
+    registry_mutex_.unlock();
+    return std::make_pair(found, &(it->second));
+  }
 };
 
 template <typename T, class... Args>

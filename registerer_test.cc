@@ -35,16 +35,19 @@ public:
 };
 
 TEST(Engine, KnownKeysYieldTheRightObjects) {
+  ASSERT_TRUE(Registry<Engine>::CanNew("V4"));
   auto engine = Registry<Engine>::New("V4");
   ASSERT_TRUE(engine.get());
   EXPECT_EQ(5, engine->consumption());
 
+  ASSERT_TRUE(Registry<Engine>::CanNew("V8"));
   auto other_engine = Registry<Engine>::New("V8");
   ASSERT_TRUE(other_engine.get());
   EXPECT_EQ(15, other_engine->consumption());
 }
 
 TEST(Engine, UnknownKeyYieldsNull) {
+  ASSERT_FALSE(Registry<Engine>::CanNew("V16"));
   auto engine = Registry<Engine>::New("V16");
   ASSERT_FALSE(engine.get());
 }
@@ -154,11 +157,11 @@ TEST(Vehicle, GetKeysWorks) {
 TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":84: Car",
-                                   this_file + ":97: Truck",
-                                   this_file + ":111: Motorbike"));
+              UnorderedElementsAre(this_file + ":87: Car",
+                                   this_file + ":100: Truck",
+                                   this_file + ":114: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
-              UnorderedElementsAre(this_file + ":110: Bicycle"));
+              UnorderedElementsAre(this_file + ":113: Bicycle"));
 }
 
 //*****************************************************************************
