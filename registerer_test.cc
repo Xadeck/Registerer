@@ -26,9 +26,8 @@ public:
 using testing::UnorderedElementsAre;
 
 TEST(Engine, RegistrationNames) {
-  // EXPECT_THAT(V4Engine::EngineTrait::keys(), UnorderedElementsAre("V4"));
-  // EXPECT_THAT(V8Engine::EngineTrait::keys(),
-  //             UnorderedElementsAre("V8", "Truck"));
+  EXPECT_EQ("V4", Registry<Engine>::GetKeyFor<V4Engine>());
+  EXPECT_EQ("V8", Registry<Engine>::GetKeyFor<V8Engine>());
 }
 
 TEST(Engine, RegistrationNameWorks) {
@@ -88,8 +87,8 @@ public:
 };
 
 TEST(Vehicle, RegistrationNames) {
-  // EXPECT_THAT(Car::VehicleTrait::keys(), UnorderedElementsAre("Car"));
-  // EXPECT_THAT(Truck::VehicleTrait::keys(), UnorderedElementsAre("Truck"));
+  EXPECT_EQ("Car", (Registry<Vehicle, Engine *>::GetKeyFor<Car>()));
+  EXPECT_EQ("Truck", (Registry<Vehicle, Engine *>::GetKeyFor<Truck>()));
 }
 
 TEST(Vehicle, RegistrationNameWorks) {
@@ -102,7 +101,7 @@ TEST(Vehicle, RegistrationNameWorks) {
 class Bicycle : public Vehicle {
 public:
   REGISTER("Bicycle", Vehicle);
-  REGISTER("Bicycle", Vehicle, Engine *);
+  REGISTER("Motorbike", Vehicle, Engine *);
 
   explicit Bicycle(Engine *engine = nullptr) : engine_(engine) {}
 
@@ -113,15 +112,21 @@ public:
   Engine *const engine_;
 };
 
-TEST(Vehicle, MultipleRegistrationWork) {
+TEST(Vehicle, MultipleRegistrationWorks) {
   auto vehicle1 = Registry<Vehicle>::CreateByName("Bicycle");
   ASSERT_TRUE(vehicle1.get());
   EXPECT_EQ(0, vehicle1->tank_size());
 
   auto engine = Registry<Engine>::CreateByName("V4");
-  auto vehicle2 = Registry<Vehicle, Engine *>::CreateByName("Bicycle", engine.get());
+  auto vehicle2 =
+      Registry<Vehicle, Engine *>::CreateByName("Motorbike", engine.get());
   ASSERT_TRUE(vehicle2.get());
   EXPECT_EQ(10, vehicle2->tank_size());
+}
+
+TEST(Vehicle, MultipleRegistrationsWorks) {
+  EXPECT_EQ("Bicycle", (Registry<Vehicle>::GetKeyFor<Bicycle>()));
+  EXPECT_EQ("Motorbike", (Registry<Vehicle, Engine *>::GetKeyFor<Bicycle>()));
 }
 
 } // namespace

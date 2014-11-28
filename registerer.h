@@ -36,6 +36,10 @@ public:
     return std::move(result);
   }
 
+  template <typename C> static const char *GetKeyFor() {
+    return C::__key(std::function<void(const T *, Args...)>());
+  }
+
 private:
   struct Entry {
     const char *const filename;
@@ -67,17 +71,18 @@ typename Registry<typename Trait::base_type, Args...>::Registerer const
 
 #define CONCAT_STRINGS(x, y) x##y
 
-#define REGISTER_AT(LINE, KEYS, TYPE, ARGS...)                                 \
+#define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
   struct CONCAT_STRINGS(__Trait, LINE) {                                       \
     typedef TYPE base_type;                                                    \
-    static std::vector<std::string> keys() { return {KEYS}; }                  \
+    static std::vector<std::string> keys() { return {KEY}; }                   \
   };                                                                           \
   const void *CONCAT_STRINGS(__unused, LINE)() const {                         \
     return &TypeRegisterer<CONCAT_STRINGS(__Trait, LINE),                      \
                            std::decay<decltype(*this)>::type,                  \
                            ##ARGS>::registerer;                                \
-  }
+  }                                                                            \
+  static const char *__key(std::function<void(TYPE *, ##ARGS)>) { return KEY; }
 
-#define REGISTER(KEYS, TYPE, ARGS...) REGISTER_AT(__LINE__, KEYS, TYPE, ##ARGS)
+#define REGISTER(KEY, TYPE, ARGS...) REGISTER_AT(__LINE__, KEY, TYPE, ##ARGS)
 
 #endif // REGISTERER_H
