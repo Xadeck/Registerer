@@ -2,13 +2,17 @@
 //
 // Limitations
 // -----------
-//  The code requires a C++11 compliant compiler.
+// The code requires a C++11 compliant compiler.
 //
-//  The code relies on the a GNU preprocessor feature for variadic macros:
+// The code relies on the a GNU preprocessor feature for variadic macros:
 //
 //    #define MACRO(x, opt...) call(x, ##opt)
 //
 // which extends to call(x) when opt is empty and call(x, ...) otherwise.
+//
+// None of the static methods of Registry<> can be called from
+// a global static, as it would result in an initialization order fiasco.
+
 #ifndef REGISTERER_H
 #define REGISTERER_H
 
@@ -28,9 +32,14 @@ public:
   static std::unique_ptr<T> New(const std::string &key, Args... args) {
     std::unique_ptr<T> result;
     registry_mutex_.lock();
-    auto entry_it = GetRegistry()->find(key);
-    if (entry_it != GetRegistry()->end()) {
-      result.reset(entry_it->second.function(args...));
+    auto it = GetInjectors()->find(key);
+    bool found = (it != GetInjectors()->end());
+    if (!found) {
+      it = GetRegistry()->find(key);
+      found = (it != GetRegistry()->end());
+    }
+    if (found) {
+      result.reset(it->second.function(args...));
     }
     registry_mutex_.unlock();
     return std::move(result);
@@ -61,6 +70,23 @@ public:
     return keys;
   }
 
+  struct Injector {
+    const std::string &key;
+    Injector(const std::string &key,
+             const std::function<T *(Args...)> &function,
+             const char *file = "undefined", const char *line = "undefined")
+        : key(key) {
+      registry_mutex_.lock();
+      const Entry entry = {file, line, function};
+      GetInjectors()->emplace(key, entry);
+      registry_mutex_.unlock();
+    }
+    ~Injector() {
+      registry_mutex_.lock();
+      GetInjectors()->erase(key);
+      registry_mutex_.unlock();
+    }
+  };
   //***************************************************************************
   // Implementation details that can't be made private because used in macros
   //***************************************************************************
@@ -89,6 +115,10 @@ private:
     return &registry;
   }
   static std::mutex registry_mutex_;
+  static std::map<std::string, Entry> *GetInjectors() {
+    static std::map<std::string, Entry> injectors;
+    return &injectors;
+  };
 };
 
 template <typename T, class... Args>

@@ -4,6 +4,7 @@
 
 using ::testing::ContainerEq;
 using ::testing::UnorderedElementsAre;
+using ::testing::Return;
 
 using ::factory::Registry;
 
@@ -58,7 +59,7 @@ TEST(Engine, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT(
       Registry<Engine>::GetKeysWithLocations(),
-      UnorderedElementsAre(this_file + ":25: V4", this_file + ":31: V8"));
+      UnorderedElementsAre(this_file + ":26: V4", this_file + ":32: V8"));
 }
 
 //*****************************************************************************
@@ -153,11 +154,33 @@ TEST(Vehicle, GetKeysWorks) {
 TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":83: Car",
-                                   this_file + ":96: Truck",
-                                   this_file + ":110: Motorbike"));
+              UnorderedElementsAre(this_file + ":84: Car",
+                                   this_file + ":97: Truck",
+                                   this_file + ":111: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
-              UnorderedElementsAre(this_file + ":109: Bicycle"));
+              UnorderedElementsAre(this_file + ":110: Bicycle"));
 }
+
+//*****************************************************************************
+// Test ability to override registered class using an injector.
+//*****************************************************************************
+class MockEngine : public Engine {
+public:
+  MOCK_CONST_METHOD0(consumption, float());
+};
+
+TEST(Registry, Injector) {
+  MockEngine *mock = new ::testing::NiceMock<MockEngine>();
+  ON_CALL(*mock, consumption()).WillByDefault(Return(123));
+
+  Registry<Engine>::Injector injector("V4", [mock]() { return mock; });
+
+  // Because of the injector, the following code will return the mock (taking
+  // ownership) instead of creating a new V4Engine instance.
+  std::unique_ptr<Engine> engine = Registry<Engine>::New("V4");
+  ASSERT_TRUE(engine.get());
+  EXPECT_EQ(123, engine->consumption()); // It's the mock expectation.
+}
+
 } // namespace test
 } // namespace
