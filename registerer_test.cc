@@ -178,8 +178,8 @@ TEST(Registry, Injector) {
 
   Registry<Engine>::Injector injector("V4", [mock]() { return mock; });
 
-  // Because of the injector, the following code will return the mock (taking
-  // ownership) instead of creating a new V4Engine instance.
+  // Because of the injector, the New() vall below will return the mock
+  //  (taking ownership) instead of creating a new V4Engine instance.
   std::unique_ptr<Engine> engine = Registry<Engine>::New("V4");
   ASSERT_TRUE(engine.get());
   EXPECT_EQ(123, engine->consumption()); // It's the mock expectation.

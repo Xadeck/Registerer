@@ -35,3 +35,5 @@ enable_testing()
 add_test(NAME    registerer_test 
          COMMAND registerer_test)
 
+add_executable(registerer_example registerer_example.cc)
+
