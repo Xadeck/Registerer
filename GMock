@@ -1,0 +1,16 @@
+include(ExternalProject)
+ExternalProject_Add(gmock
+#  URL https://googlemock.googlecode.com/files/gmock-1.7.0.zip
+  URL file:///Users/xdecoret/Downloads/gmock-1.7.0.zip
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
+  INSTALL_COMMAND ""
+)
+function(add_gmock target)
+  ExternalProject_Get_Property(gmock source_dir binary_dir)
+  add_dependencies(registerer_test gmock)
+  target_include_directories(${target} PUBLIC ${source_dir}/include)
+  target_include_directories(${target} PUBLIC ${source_dir}/gtest/include)
+  target_link_libraries(${target} ${binary_dir}/libgmock.a)
+  target_link_libraries(${target} ${binary_dir}/libgmock_main.a)
+  target_link_libraries(${target} -lpthread)
+endfunction(add_gmock)
