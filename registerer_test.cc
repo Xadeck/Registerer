@@ -63,7 +63,7 @@ TEST(Engine, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT(
       Registry<Engine>::GetKeysWithLocations(),
-      UnorderedElementsAre(this_file + ":25: V4", this_file + ":31: V8"));
+      UnorderedElementsAre(this_file + ":25: V4", this_file + ":32: V8"));
 }
 
 //*****************************************************************************
@@ -158,11 +158,11 @@ TEST(Vehicle, GetKeysWorks) {
 TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":85: Car",
-                                   this_file + ":97: Truck",
-                                   this_file + ":110: Motorbike"));
+              UnorderedElementsAre(this_file + ":87: Car",
+                                   this_file + ":100: Truck",
+                                   this_file + ":114: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
-              UnorderedElementsAre(this_file + ":109: Bicycle"));
+              UnorderedElementsAre(this_file + ":113: Bicycle"));
 }
 
 //*****************************************************************************
