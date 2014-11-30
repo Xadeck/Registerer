@@ -23,12 +23,14 @@ public:
 
 class V4Engine : public Engine {
   REGISTER("V4", Engine);
+
 public:
   virtual float consumption() const { return 5.0; }
 };
 
 class V8Engine : public Engine {
   REGISTER("V8", Engine);
+
 public:
   virtual float consumption() const { return 15.0; }
 };
@@ -83,6 +85,7 @@ public:
 
 class Car : public Vehicle {
   REGISTER("Car", Vehicle, Engine *);
+
 public:
   explicit Car(Engine *engine) : engine_(engine) {}
 
@@ -95,6 +98,7 @@ private:
 
 class Truck : public Vehicle {
   REGISTER("Truck", Vehicle, Engine *);
+
 public:
   explicit Truck(Engine *engine) : engine_(engine) {}
 
@@ -108,6 +112,7 @@ private:
 class Bicycle : public Vehicle {
   REGISTER("Bicycle", Vehicle);
   REGISTER("Motorbike", Vehicle, Engine *);
+
 public:
   explicit Bicycle(Engine *engine = nullptr) : engine_(engine) {}
 
