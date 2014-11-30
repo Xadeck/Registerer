@@ -34,11 +34,11 @@ match the name of the class:
     };
 ```
 Note that the annotation is done only inside the derived classes.
-Nothing needs to be added to the Shape class, and no declaration
-other than the Shape class need to be done. The annotation can be
+Nothing needs to be added to the `Shape` class, and no declaration
+other than the `Shape` class need to be done. The annotation can be
 put inside the private, protected or public section of the class.
 
-With the annotation, a Shape instance can be created from a string:
+With the annotation, a `Shape` instance can be created from a string:
 
 ```cpp
     std::unique_ptr<Shape> shape = Registry<Shape>::New("Rect");
@@ -65,7 +65,8 @@ the constructor signature:
       void Draw() const override { ... }
     };
 ```
-The class can be instantiated using Registry
+The class can be instantiated using `Registry<>` with extra parameters matching
+the constructor signature:
 
 ```cpp
     auto shape = Registry<Shape, const string&>::New("Ellipsis");
@@ -73,7 +74,9 @@ The class can be instantiated using Registry
 ```
 One very interesting benefit of this approach is that client code can
 extend the supported types without editing the base class or
-any of the existing registered classes.
+any of the existing registered classes. The code below simply test
+if a class can be instantiated with a paramater, and otherwise
+tries to instantiate without parameters:
 
 ```cpp
     int main(int argc, char **argv) {
@@ -105,7 +108,7 @@ some new client code like the one above:
 ## Testing
 
 When testing client code using registered classes, it may be not desired to
-actually instantiate real classes. If the Draw() implementations for example
+actually instantiate real classes. If the `Draw()` implementations for example
 require a graphic context to be active, calling those functions in an
 offscreen automated test will fail. Injectors can be used to temporarily
 replace registered classes by arbitrary factories:
@@ -124,25 +127,25 @@ replace registered classes by arbitrary factories:
                                   []->Shape*{ return new FakeShape});
         Registry<Shape>::Injector("Circle",
                                   []->Shape*{ return new FakeShape});
-        EXPECT_TRUE(Draw({...}));
+        EXPECT_TRUE(FunctionUsingRegistryForShape()));
       };
     }
 ```
 Injectors can also be used as static global variables to perform
 registration of a class *outside* of the class, in replacement for
-the REGISTER macro. This is useful to register classes whose code
+the `REGISTER` macro. This is useful to register classes whose code
 cannot be edited.
 
 ## Goodies
 
-Classes registered with the REGISTER macro can know the key under
+Classes registered with the `REGISTER` macro can know the key under
 which they are registered. The following code:
 
 ```cpp
     Registry<Vehicle>::GetKeyFor<Circle>()
 ```
 will return the string "Circle". This works on object classes,
-passed as template parameter to GetKeyFor(), and not on object
+passed as template parameter to `GetKeyFor()`, and not on object
 instances. So there is no such functionality as:
 
 ```cpp
@@ -153,7 +156,7 @@ as it would require runtime type identification. It is possible to
 extend the framework to support it though, by storing `type_info`
 objects in the registry.
 
-The Registry<> class can also be used to list all keys that are
+The `Registry<>` class can also be used to list all keys that are
 registered, along with the filename and line number at which the
 registration is defined. It does not list though the type associated
 to the key. Here again, it is pretty easy to extend the framework
@@ -168,24 +171,23 @@ The code relies on the a GNU preprocessor feature for variadic macros:
 ```cpp
     #define MACRO(x, opt...) call(x, ##opt)
 ```
-which extends to call(x) when opt is empty and call(x, ...) otherwise.
+which extends to `call(x)` when opt is empty and `call(x, ...)` otherwise.
 
-None of the static methods of Registry<> can be called from
+None of the static methods of `Registry<>` can be called from
 a global static, as it would result in an initialization order fiasco.
 
 ## Features summary
  
- - Neader-only library
+ - Header-only library
  - No need to declare registration ahead on the base class,
-   which means this file need to be included only in files
+   which means header need to be included only in files
    declaring subclasses that register themselves.
  - Registration is done via a macro called inside the declaration
    of the class, which reduces boilerplate code, and incidentally makes
    the registration name available to the class.
- - Macro supports constructors with arbitrary number of arguments,
-   all implemented in a single macro
+ - Single macro supports constructors with arbitrary number of arguments.
  - Class can be registered for different constructors, making
    it easy to implement logic that try to instantiate an object
    from different parameters.
- - Builtin mechanism to override registered class, making dependency
+ - Builtin mechanism to override registered classes, making dependency
    injection e.g. for tests very easy.

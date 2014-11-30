@@ -3,17 +3,16 @@
 // The major points of the framework:
 //  - header-only library
 //  - no need to declare registration ahead on the base class,
-//    which means this file need to be included only in files
+//    which means header need to be included only in files
 //    declaring subclasses that register themselves.
 //  - registration is done via a macro called inside the declaration
 //    of the class, which reduces boilerplate code, and incidentally makes
 //    the registration name available to the class.
-//  - macro supports constructors with arbitrary number of arguments,
-//    all implemented in a single macro
+//  - ingle macro supports constructors with arbitrary number of arguments.
 //  - class can be registered for different constructors, making
 //    it easy to implement logic that try to instantiate an object
 //    from different parameters.
-//  - builtin mechanism to override registered class, making dependency
+//  - builtin mechanism to override registered classes, making dependency
 //    injection e.g. for tests very easy.
 //
 // Basic usage
@@ -74,7 +73,8 @@
 //      void Draw() const override { ... }
 //  };
 //
-// The class can be instantiated using Registry
+// The class can be instantiated using Registry<> with extra parameters 
+// matching the constructor signature:
 //
 //  auto shape = Registry<Shape, const string&>::New("Ellipsis");
 //  shape->Draw();  // will draw a circle!
@@ -129,7 +129,7 @@
 //                                 []->Shape*{ return new FakeShape});
 //       Registry<Shape>::Injector("Circle",
 //                                 []->Shape*{ return new FakeShape});
-//       EXPECT_TRUE(Draw({...}));
+//       EXPECT_TRUE(FunctionUsingRegistryForShape());
 //     };
 //   }
 //
@@ -192,10 +192,21 @@
 namespace factory {
 template <typename T, class... Args> class Registry {
 public:
+  // Return 'true' if there is a class registered for `key` for
+  // a constructor with signature (Args... args).
+  //
+  // This function can not be called from any static initializer
+  // or it creates initializer order fiasco.
   static bool CanNew(const std::string &key, Args... args) {
     return GetEntry(key, args...).first;
   }
 
+  // If there is a class registered for `key` for a constructor 
+  // with signature (Args... args), instantiate an object of that class
+  // passing args to the constructor. Returns a null pointer otherwise.
+  //
+  // This function can not be called from any static initializer
+  // or it creates initializer order fiasco.
   static std::unique_ptr<T> New(const std::string &key, Args... args) {
     std::unique_ptr<T> result;
     auto entry = GetEntry(key, args...);
@@ -206,13 +217,16 @@ public:
     return std::move(result);
   }
 
-  // TODO: can we use template specialization to return ""
-  // for classes which are not registered?
+  // Return the key under which class `C` is registered. The header
+  // defining that class must be included by code calling this
+  // function. If class is not registered, there will be a compile-
+  // time failure.
   template <typename C> static const char *GetKeyFor() {
     return C::__key(std::function<void(const T *, Args...)>());
   }
 
   // Returns the list of keys registered for the registry.
+  //
   // This function can not be called from any static initializer
   // or it creates initializer order fiasco.
   static std::vector<std::string> GetKeys() {
@@ -238,6 +252,12 @@ public:
     return keys;
   }
 
+  // Helper class which uses RAII to inject a factory which will be used
+  // instead of any class registered with the same key, for any call 
+  // within the scope of the variable.
+  // If there are two injectors in the same scope for the same key,
+  // the last one takes precedence and cancels the first one, which will
+  // never be active, even if the second gets out of scope.
   struct Injector {
     const std::string &key;
     Injector(const std::string &key,
@@ -277,8 +297,8 @@ private:
     const __function_t function;
   };
   typedef std::map<std::string, Entry> EntryMap;
-  // The registry is created on demand using a static variable inside a static
-  // method so that there is no order initialization fiasco.
+  // The registry and injectors are created on demand using static variables
+  // inside a static method so that there is no order initialization fiasco.
   static EntryMap *GetRegistry() {
     static EntryMap registry;
     return &registry;
