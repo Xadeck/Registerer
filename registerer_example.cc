@@ -10,20 +10,20 @@ public:
 };
 
 class Circle : public Shape {
-public:
   REGISTER("Circle", Shape);
+public:
   void Draw() const override { std::cout << "Circle()\n"; }
 };
 
 class Rect : public Shape {
-public:
   REGISTER("Rectangle", Shape);
+public:
   void Draw() const override { std::cout << "Rectangle()\n"; }
 };
 
 class Ellipsis : public Shape {
-public:
   REGISTER("Ellipsis", Shape, const std::string &);
+public:
   explicit Ellipsis(const std::string &params) : params(params) {}
   void Draw() const override { std::cout << "Ellipsis(" << params << ")\n"; }
 

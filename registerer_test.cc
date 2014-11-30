@@ -22,15 +22,14 @@ public:
 };
 
 class V4Engine : public Engine {
-public:
   REGISTER("V4", Engine);
+public:
   virtual float consumption() const { return 5.0; }
 };
 
 class V8Engine : public Engine {
-public:
   REGISTER("V8", Engine);
-
+public:
   virtual float consumption() const { return 15.0; }
 };
 
@@ -62,7 +61,7 @@ TEST(Engine, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT(
       Registry<Engine>::GetKeysWithLocations(),
-      UnorderedElementsAre(this_file + ":26: V4", this_file + ":32: V8"));
+      UnorderedElementsAre(this_file + ":25: V4", this_file + ":31: V8"));
 }
 
 //*****************************************************************************
@@ -83,9 +82,8 @@ public:
 };
 
 class Car : public Vehicle {
-public:
   REGISTER("Car", Vehicle, Engine *);
-
+public:
   explicit Car(Engine *engine) : engine_(engine) {}
 
   const Engine *engine() const override { return engine_; }
@@ -96,9 +94,8 @@ private:
 };
 
 class Truck : public Vehicle {
-public:
   REGISTER("Truck", Vehicle, Engine *);
-
+public:
   explicit Truck(Engine *engine) : engine_(engine) {}
 
   const Engine *engine() const override { return engine_; }
@@ -109,10 +106,9 @@ private:
 };
 
 class Bicycle : public Vehicle {
-public:
   REGISTER("Bicycle", Vehicle);
   REGISTER("Motorbike", Vehicle, Engine *);
-
+public:
   explicit Bicycle(Engine *engine = nullptr) : engine_(engine) {}
 
   const Engine *engine() const override { return engine_; }
@@ -157,11 +153,11 @@ TEST(Vehicle, GetKeysWorks) {
 TEST(Vehicle, GetKeysWithLocationsWorks) {
   static const std::string this_file(__FILE__);
   EXPECT_THAT((Registry<Vehicle, Engine *>::GetKeysWithLocations()),
-              UnorderedElementsAre(this_file + ":87: Car",
-                                   this_file + ":100: Truck",
-                                   this_file + ":114: Motorbike"));
+              UnorderedElementsAre(this_file + ":85: Car",
+                                   this_file + ":97: Truck",
+                                   this_file + ":110: Motorbike"));
   EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
-              UnorderedElementsAre(this_file + ":113: Bicycle"));
+              UnorderedElementsAre(this_file + ":109: Bicycle"));
 }
 
 //*****************************************************************************
