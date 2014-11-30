@@ -162,6 +162,24 @@ registration is defined. It does not list though the type associated
 to the key. Here again, it is pretty easy to extend the framework
 to provide such functionality using type_info objects.
 
+Even though not necessary, one can define intermediate macros to
+reduce boilerplate code even more. For the `Shape` example above,
+one could define:
+
+```cpp
+   #define REGISTER_SHAPE(KEY, ARGS...) REGISTER(#KEY, Shape, ##ARGS)
+```
+with which the `Ellipsis` class above would simply be written:
+
+```cpp
+    class Ellipsis : public Shape {
+      REGISTER_SHAPE(Ellipsis);
+      REGISTER_SHAPE(Ellipsis, const std::string &);
+
+    public:
+    };
+```
+
 ## Limitations
 
 The code requires a C++11 compliant compiler.

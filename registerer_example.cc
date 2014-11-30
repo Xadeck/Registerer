@@ -9,23 +9,25 @@ public:
   virtual void Draw() const = 0;
 };
 
+#define REGISTER_SHAPE(KEY, ARGS...) REGISTER(#KEY, Shape, ##ARGS)
+
 class Circle : public Shape {
-  REGISTER("Circle", Shape);
+  REGISTER_SHAPE(Circle);
 
 public:
   void Draw() const override { std::cout << "Circle()\n"; }
 };
 
 class Rect : public Shape {
-  REGISTER("Rectangle", Shape);
+  REGISTER_SHAPE(Rectangle);
 
 public:
   void Draw() const override { std::cout << "Rectangle()\n"; }
 };
 
 class Ellipsis : public Shape {
-  REGISTER("Ellipsis", Shape);
-  REGISTER("Ellipsis", Shape, const std::string &);
+  REGISTER_SHAPE(Ellipsis);
+  REGISTER_SHAPE(Ellipsis, const std::string &);
 
 public:
   explicit Ellipsis(const std::string &params = "") : params(params) {}
