@@ -13,7 +13,7 @@ Given an interface:
       virtual ~Shape() {}
       virtual void Draw() const = 0;
     };
-
+```
 The framework allows to annotate with `REGISTER` macro any subclass:
 
 ```cpp
@@ -22,7 +22,7 @@ The framework allows to annotate with `REGISTER` macro any subclass:
      public:
        void Draw() const override { ... }
      };
-
+```
 The first parameter of the macro can be any string and does not have to
 match the name of the class:
 
@@ -32,7 +32,7 @@ match the name of the class:
     public:
       void Draw() const override { ... }
     };
-
+```
 Note that the annotation is done only inside the derived classes.
 Nothing needs to be added to the Shape class, and no declaration
 other than the Shape class need to be done. The annotation can be
@@ -43,7 +43,7 @@ With the annotation, a Shape instance can be created from a string:
 ```cpp
     std::unique_ptr<Shape> shape = Registry<Shape>::New("Rect");
     shape->Draw();  // will draw a rectangle!
-
+```
 The function returns a `unique_ptr<>` which makes ownership clear and simple.
 If no class is registered, it will return a null `unique_ptr<>`.
 The `CanNew()` predicate can be used to check if `New()` would succeed without
@@ -64,12 +64,13 @@ the constructor signature:
       explicit Ellipsis(const std::string& params) { ... }
       void Draw() const override { ... }
     };
-
+```
 The class can be instantiated using Registry
 
+```cpp
     auto shape = Registry<Shape, const string&>::New("Ellipsis");
     shape->Draw();  // will draw a circle!
-
+```
 One very interesting benefit of this approach is that client code can
 extend the supported types without editing the base class or
 any of the existing registered classes.
@@ -86,7 +87,7 @@ any of the existing registered classes.
         }
       }
     }
-
+```
 Additionally, it is possible to register a class with different constructors
 so it works with some old client code that only uses Registry<Shape> and
 some new client code like the one above:
@@ -100,7 +101,7 @@ some new client code like the one above:
     explicit Ellipsis(const std::string& params = "") { ... }
     void Draw() const override { ... }
   };
-
+```
 ## Testing
 
 When testing client code using registered classes, it may be not desired to
@@ -126,7 +127,7 @@ replace registered classes by arbitrary factories:
         EXPECT_TRUE(Draw({...}));
       };
     }
-
+```
 Injectors can also be used as static global variables to perform
 registration of a class *outside* of the class, in replacement for
 the REGISTER macro. This is useful to register classes whose code
@@ -139,7 +140,7 @@ which they are registered. The following code:
 
 ```cpp
     Registry<Vehicle>::GetKeyFor<Circle>()
-
+```
 will return the string "Circle". This works on object classes,
 passed as template parameter to GetKeyFor(), and not on object
 instances. So there is no such functionality as:
@@ -147,7 +148,7 @@ instances. So there is no such functionality as:
 ```cpp
     std::unique_ptr<Shape> shape = new Circle();
     std::cout << Registry<Vehicle>::GetKeyFor(*shape); // Not implemented
-
+```
 as it would require runtime type identification. It is possible to
 extend the framework to support it though, by storing `type_info`
 objects in the registry.
@@ -166,7 +167,7 @@ The code relies on the a GNU preprocessor feature for variadic macros:
 
 ```cpp
     #define MACRO(x, opt...) call(x, ##opt)
-
+```
 which extends to call(x) when opt is empty and call(x, ...) otherwise.
 
 None of the static methods of Registry<> can be called from
