@@ -7,6 +7,7 @@ C++ header-only library to create classe factories registered by name.
 
 Given an interface:
 
+```cpp
     class Shape {
     public:
       virtual ~Shape() {}
@@ -15,6 +16,7 @@ Given an interface:
 
 The framework allows to annotate with `REGISTER` macro any subclass:
 
+```cpp
     class Circle : public Shape {
       REGISTER("Circle", Shape);
      public:
@@ -24,6 +26,7 @@ The framework allows to annotate with `REGISTER` macro any subclass:
 The first parameter of the macro can be any string and does not have to
 match the name of the class:
 
+```cpp
     class Rect : public Shape {
       REGISTER("Rectangle", Shape);
     public:
@@ -37,6 +40,7 @@ put inside the private, protected or public section of the class.
 
 With the annotation, a Shape instance can be created from a string:
 
+```cpp
     std::unique_ptr<Shape> shape = Registry<Shape>::New("Rect");
     shape->Draw();  // will draw a rectangle!
 
@@ -53,6 +57,7 @@ parameters. For example, shapes with injectable parameters
 can be registered using `REGISTER` macro with extra parameters matching
 the constructor signature:
 
+```cpp
     class Ellipsis : public Shape {
       REGISTER("Ellipsis", Shape, const std::string&);
     public:
@@ -69,6 +74,7 @@ One very interesting benefit of this approach is that client code can
 extend the supported types without editing the base class or
 any of the existing registered classes.
 
+```cpp
     int main(int argc, char **argv) {
       for (int i = 1; i + 1 < argc; i += 2) {
         const std::string key = argv[i];
@@ -85,6 +91,7 @@ Additionally, it is possible to register a class with different constructors
 so it works with some old client code that only uses Registry<Shape> and
 some new client code like the one above:
 
+```cpp
    class Ellipsis : public Shape {
     REGISTER("Ellipsis", Shape);
     REGISTER("Ellipsis", Shape, const std::string&);
@@ -102,6 +109,7 @@ require a graphic context to be active, calling those functions in an
 offscreen automated test will fail. Injectors can be used to temporarily
 replace registered classes by arbitrary factories:
 
+```cpp
     class FakeShape : public Shape {
      public:
       void Draw() override {}
@@ -129,12 +137,14 @@ cannot be edited.
 Classes registered with the REGISTER macro can know the key under
 which they are registered. The following code:
 
+```cpp
     Registry<Vehicle>::GetKeyFor<Circle>()
 
 will return the string "Circle". This works on object classes,
 passed as template parameter to GetKeyFor(), and not on object
 instances. So there is no such functionality as:
 
+```cpp
     std::unique_ptr<Shape> shape = new Circle();
     std::cout << Registry<Vehicle>::GetKeyFor(*shape); // Not implemented
 
@@ -154,6 +164,7 @@ The code requires a C++11 compliant compiler.
 
 The code relies on the a GNU preprocessor feature for variadic macros:
 
+```cpp
     #define MACRO(x, opt...) call(x, ##opt)
 
 which extends to call(x) when opt is empty and call(x, ...) otherwise.
