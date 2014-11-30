@@ -24,7 +24,7 @@
 //      public:
 //       virtual ~Shape() {}
 //       virtual void Draw() const = 0;
-//    }
+//    };
 //
 // The framework allows to annotate with REGISTER macro any subclass:
 //
@@ -32,7 +32,7 @@
 //       REGISTER("Circle", Shape);
 //      public:
 //       void Draw() const override { ... }
-//    }
+//    };
 //
 // The first parameter of the macro can be any string and does not have to
 // match the name of the class:
@@ -41,7 +41,7 @@
 //     REGISTER("Rectangle", Shape);
 //   public:
 //     void Draw() const override { ... }
-//  }
+//  };
 //
 // Note that the annotation is done only inside the derived classes.
 // Nothing needs to be added to the Shape class, and no declaration
@@ -80,7 +80,7 @@
 //  shape->Draw();  // will draw a circle!
 //
 // One very interesting benefit of this approach is that client code can
-// extend the supported types without editing the base class (Shape) or
+// extend the supported types without editing the base class or
 // any of the existing registered classes.
 //
 //   int main(int argc, char **argv) {
@@ -100,9 +100,9 @@
 // some new client code like the one above:
 //
 //   class Ellipsis : public Shape {
-//    public:
 //     REGISTER("Ellipsis", Shape);
 //     REGISTER("Ellipsis", Shape, const std::string&);
+//    public:
 //     explicit Ellipsis(const std::string& params = "") { ... }
 //     void Draw() const override { ... }
 //   };
@@ -119,7 +119,8 @@
 //   class FakeShape : public Shape {
 //    public:
 //     void Draw() override {}
-//   }
+//   };
+//
 //   TEST(Draw, WorkingCase) {
 //     const Registry<Shape>::Injector injectors[] =
 //       Registry<Shape>::Injector("Circle",
