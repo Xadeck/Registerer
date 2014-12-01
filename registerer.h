@@ -1,6 +1,6 @@
 // Framework for performing registration of object factories.
 //
-// The major points of the framework:
+// The major points of the framework are:
 //  - header-only library
 //  - no need to declare registration ahead on the base class,
 //    which means header need to be included only in files
