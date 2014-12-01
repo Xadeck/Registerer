@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 
 project (registerer C CXX)
 add_definitions(-std=c++11)
