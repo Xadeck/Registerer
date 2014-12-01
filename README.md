@@ -36,7 +36,9 @@ match the name of the class:
 Note that the annotation is done only inside the derived classes.
 Nothing needs to be added to the `Shape` class, and no declaration
 other than the `Shape` class need to be done. The annotation can be
-put inside the private, protected or public section of the class.
+put inside the private, protected or public section of the class. 
+The annotation adds not bytes to the class, whose size is equal to
+the class would have without the annotation.
 
 With the annotation, a `Shape` instance can be created from a string:
 
@@ -75,7 +77,7 @@ the constructor signature:
 One very interesting benefit of this approach is that client code can
 extend the supported types without editing the base class or
 any of the existing registered classes. The code below simply test
-if a class can be instantiated with a paramater, and otherwise
+if a class can be instantiated with a parameter, and otherwise
 tries to instantiate without parameters:
 
 ```cpp
@@ -92,8 +94,8 @@ tries to instantiate without parameters:
     }
 ```
 Additionally, it is possible to register a class with different constructors
-so it works with some old client code that only uses Registry<Shape> and
-some new client code like the one above:
+so it works with old client code that only uses Registry<Shape> and
+new client code like the one above:
 
 ```cpp
    class Ellipsis : public Shape {

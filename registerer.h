@@ -44,7 +44,7 @@
 //
 // Note that the annotation is done only inside the derived classes.
 // Nothing needs to be added to the Shape class, and no declaration
-// other than the Shape class need to be done. The annotation can be
+// other than the Shape class needs to be done. The annotation can be
 // put inside the private, protected or public section of the class.
 // The annotation adds not bytes to the class, whose size is equal to
 // the class would have without the annotation.
@@ -83,7 +83,9 @@
 //
 // One very interesting benefit of this approach is that client code can
 // extend the supported types without editing the base class or
-// any of the existing registered classes.
+// any of the existing registered classes. The code below simply test
+// if a class can be instantiated with a parameter, and otherwise
+// tries to instantiate without parameters:
 //
 //   int main(int argc, char **argv) {
 //     for (int i = 1; i + 1 < argc; i += 2) {
@@ -98,8 +100,8 @@
 //   }
 //
 // Additionally, it is possible to register a class with different constructors
-// so it works with some old client code that only uses Registry<Shape> and
-// some new client code like the one above:
+// so it works with old client code that only uses Registry<Shape> and
+// some client code like the one above:
 //
 //   class Ellipsis : public Shape {
 //     REGISTER("Ellipsis", Shape);
@@ -259,6 +261,8 @@ public:
   }
 
   // Returns the list of keys registered for the registry.
+  // Keys corresponding to injectors (see below) are suffixed with
+  // a star.
   //
   // This function can not be called from any static initializer
   // or it creates initializer order fiasco.
@@ -277,6 +281,8 @@ public:
 
   // Like GetKeys() function, but also returns the filename
   // and line number of the corresponding REGISTER() macros.
+  // For injectors, the filename and line number are those
+  // passed to the injector constructor.
   static std::vector<std::string> GetKeysWithLocations() {
     std::vector<std::string> keys;
     registry_mutex_.lock();
@@ -298,7 +304,7 @@ public:
   // within the scope of the variable.
   // If there are two injectors in the same scope for the same key,
   // the last one takes precedence and cancels the first one, which will
-  // never be active, even if the second gets out of scope.
+  // never be active, even if the second one gets out of scope.
   struct Injector {
     const std::string &key;
     Injector(const std::string &key,

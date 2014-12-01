@@ -39,7 +39,7 @@ private:
 
 int main(int argc, char **argv) {
   REGISTER_ALIAS(Shape, "Rectangle", "Rect");
-  
+
   for (int i = 1; i + 1 < argc; i += 2) {
     const std::string key = argv[i];
     const std::string params = argv[i + 1];
