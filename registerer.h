@@ -46,6 +46,8 @@
 // Nothing needs to be added to the Shape class, and no declaration
 // other than the Shape class need to be done. The annotation can be
 // put inside the private, protected or public section of the class.
+// The annotation adds not bytes to the class, whose size is equal to
+// the class would have without the annotation.
 //
 // With the annotation, a Shape instance can be created from a string:
 //
