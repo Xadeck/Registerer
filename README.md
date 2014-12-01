@@ -4,6 +4,7 @@ Registerer
 C++ header-only library to create classe factories registered by name.
 
 [![Build status](https://travis-ci.org/Xadeck/Registerer.png?branch=master)](https://travis-ci.org/Xadeck/Registerer)
+[![Build Status](https://drone.io/github.com/Xadeck/Registerer/status.png)](https://drone.io/github.com/Xadeck/Registerer/latest)
 
 ## Basic usage
 
