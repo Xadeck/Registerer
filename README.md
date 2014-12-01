@@ -121,16 +121,24 @@ replace registered classes by arbitrary factories:
     
     TEST(Draw, WorkingCase) {
       const Registry<Shape>::Injector injectors[] =
-        Registry<Shape>::Injector("Circle",
-                                  []->Shape*{ return new FakeShape});
-        Registry<Shape>::Injector("Rectangle",
-                                  []->Shape*{ return new FakeShape});
-        Registry<Shape>::Injector("Circle",
-                                  []->Shape*{ return new FakeShape});
+        Registry<Shape>::Injector("Circle", []{ return new FakeShape});
+        Registry<Shape>::Injector("Rectangle", []{ return new FakeShape});
+        Registry<Shape>::Injector("Circle", []{ return new FakeShape});
         EXPECT_TRUE(FunctionUsingRegistryForShape()));
       };
     }
 ```
+
+Note that it may be necessary to specify the return type of lambda function
+for code to compile as in `[] -> Shape* { return .... }`.
+
+Injectors can also be used to define global or local name alias, as 
+illustrated by the example `REGISTER_ALIAS` macro in this file.
+
+```cpp
+  REGISTER_ALIAS(Shape, "Rectangle", "Rect");
+```
+
 Injectors can also be used as static global variables to perform
 registration of a class *outside* of the class, in replacement for
 the `REGISTER` macro. This is useful to register classes whose code

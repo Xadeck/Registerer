@@ -186,6 +186,20 @@ TEST(Registry, Injector) {
   EXPECT_EQ(123, engine->consumption()); // It's the mock expectation.
 }
 
+TEST(Registry, Aliases) {
+  REGISTER_ALIAS(Vehicle, "Bicycle", "Bike");
+  REGISTER_ALIAS(Vehicle, "Bicycle", "Velo");
+
+  ASSERT_TRUE((Registry<Vehicle>::CanNew("Bike")));
+  auto vehicle = Registry<Vehicle>::New("Bike");
+  ASSERT_TRUE(vehicle.get());
+  EXPECT_EQ(0, vehicle->tank_size());
+
+  EXPECT_THAT(Registry<Vehicle>::GetKeys(), ::testing::Contains("Bike*"));
+  EXPECT_THAT(Registry<Vehicle>::GetKeysWithLocations(),
+              ::testing::Contains(std::string(__FILE__) + ":190: Bike*"));
+}
+
 //*****************************************************************************
 // Miscelleanuous tests
 //*****************************************************************************
@@ -229,5 +243,6 @@ TEST(RegisterMacro, WorksInHierarchies) {
   ASSERT_TRUE(sub_derived.get());
   EXPECT_EQ(5, sub_derived->value());
 }
+
 } // namespace test
 } // namespace
