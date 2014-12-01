@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 2.8)
 
 project (registerer C CXX)
-add_definitions(-std=c++11)
 enable_testing()
 include(GMock)
+include(Cxx11)
 
 add_executable(registerer_test registerer_test.cc)
 add_gmock(registerer_test)
