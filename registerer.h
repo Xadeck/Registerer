@@ -257,7 +257,8 @@ public:
   // function. If class is not registered, there will be a compile-
   // time failure.
   template <typename C> static const char *GetKeyFor() {
-    return C::__key(std::function<void(const T *, Args...)>());
+    return C::__key(static_cast<const T *>(nullptr),
+                    std::function<void(Args...)>());
   }
 
   // Returns the list of keys registered for the registry.
@@ -415,7 +416,9 @@ typename Registry<base_type, Args...>::__Registerer const
                                       std::decay<decltype(*this)>::type,       \
                                       ##ARGS>::instance;                       \
   }                                                                            \
-  static const char *__key(std::function<void(TYPE *, ##ARGS)>) { return KEY; }
+  static const char *__key(const TYPE *, std::function<void(ARGS)>) {          \
+    return KEY;                                                                \
+  }
 
 } // namespace factory
 
