@@ -313,7 +313,7 @@ public:
         : key(key) {
       registry_mutex_.lock();
       const Entry entry = {file, line, function};
-      GetInjectors()->emplace(key, entry);
+      GetInjectors()->insert(std::make_pair(key, entry));
       registry_mutex_.unlock();
     }
     ~Injector() {
@@ -332,7 +332,7 @@ public:
                  const char *file, const char *line) {
       const Entry entry = {file, line, function};
       registry_mutex_.lock();
-      GetRegistry()->emplace(key, entry);
+      GetRegistry()->insert(std::make_pair(key, entry));
       registry_mutex_.unlock();
     }
   };

@@ -4,6 +4,7 @@ ExternalProject_Add(gmock
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
   INSTALL_COMMAND ""
 )
+ExternalProject_Get_Property(gmock source_dir binary_dir)
 include_directories(${target} PUBLIC ${source_dir}/include)
 include_directories(${target} PUBLIC ${source_dir}/gtest/include)
 function(add_gmock target)
