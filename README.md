@@ -3,6 +3,8 @@ Registerer
 
 C++ header-only library to create classe factories registered by name.
 
+[![Build status](https://travis-ci.org/Xadeck/Registerer.png?branch=master)](https://travis-ci.org/Xadeck/Registerer)
+
 ## Basic usage
 
 Given an interface:
@@ -220,7 +222,3 @@ a global static, as it would result in an initialization order fiasco.
  - Builtin mechanism to override registered classes, making dependency
    injection e.g. for tests very easy.
 
-## Build status
-
-[![Build status](https://travis-ci.org/Xadeck/Registerer.png?branch=master)](https://travis-ci.org/Xadeck/Registerer)
-[![Coverage Status](https://coveralls.io/repos/Xadeck/Registerer/badge.png)](https://coveralls.io/r/Xadeck/Registerer)
