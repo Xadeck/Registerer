@@ -73,7 +73,7 @@
 //      void Draw() const override { ... }
 //  };
 //
-// The class can be instantiated using Registry<> with extra parameters 
+// The class can be instantiated using Registry<> with extra parameters
 // matching the constructor signature:
 //
 //  auto shape = Registry<Shape, const string&>::New("Ellipsis");
@@ -216,7 +216,7 @@ public:
     return GetEntry(key, args...).first;
   }
 
-  // If there is a class registered for `key` for a constructor 
+  // If there is a class registered for `key` for a constructor
   // with signature (Args... args), instantiate an object of that class
   // passing args to the constructor. Returns a null pointer otherwise.
   //
@@ -268,7 +268,7 @@ public:
   }
 
   // Helper class which uses RAII to inject a factory which will be used
-  // instead of any class registered with the same key, for any call 
+  // instead of any class registered with the same key, for any call
   // within the scope of the variable.
   // If there are two injectors in the same scope for the same key,
   // the last one takes precedence and cancels the first one, which will

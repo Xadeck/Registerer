@@ -186,5 +186,48 @@ TEST(Registry, Injector) {
   EXPECT_EQ(123, engine->consumption()); // It's the mock expectation.
 }
 
+//*****************************************************************************
+// Miscelleanuous tests
+//*****************************************************************************
+class Base {
+public:
+  virtual ~Base() {}
+  virtual int value() const = 0;
+};
+
+class UnregisteredDerived : public Base {
+public:
+  int value() const override { return 3; }
+};
+
+class RegisteredDerived : public Base {
+public:
+  REGISTER("Derived", Base);
+
+private:
+  int value() const override { return 3; }
+};
+
+class RegisteredSubDerived : public RegisteredDerived {
+public:
+  REGISTER("SubDerived", Base);
+  int value() const override { return 5; }
+};
+
+TEST(RegisterMacro, DoesNotChangeSize) {
+  EXPECT_EQ(sizeof(UnregisteredDerived), sizeof(RegisteredDerived));
+}
+
+TEST(RegisterMacro, WorksInHierarchies) {
+  ASSERT_TRUE(Registry<Base>::CanNew("Derived"));
+  auto derived = Registry<Base>::New("Derived");
+  ASSERT_TRUE(derived.get());
+  EXPECT_EQ(3, derived->value());
+
+  ASSERT_TRUE(Registry<Base>::CanNew("SubDerived"));
+  auto sub_derived = Registry<Base>::New("SubDerived");
+  ASSERT_TRUE(sub_derived.get());
+  EXPECT_EQ(5, sub_derived->value());
+}
 } // namespace test
 } // namespace
