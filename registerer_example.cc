@@ -15,14 +15,14 @@ class Circle : public Shape {
   REGISTER_SHAPE(Circle);
 
 public:
-  void Draw() const override { std::cout << "Circle()\n"; }
+  void Draw() const override { std::cout << "Circle\n"; }
 };
 
 class Rect : public Shape {
   REGISTER_SHAPE(Rectangle);
 
 public:
-  void Draw() const override { std::cout << "Rectangle()\n"; }
+  void Draw() const override { std::cout << "Rectangle\n"; }
 };
 
 class Ellipsis : public Shape {
@@ -31,7 +31,7 @@ class Ellipsis : public Shape {
 
 public:
   explicit Ellipsis(const std::string &params = "") : params(params) {}
-  void Draw() const override { std::cout << "Ellipsis(" << params << ")\n"; }
+  void Draw() const override { std::cout << "Ellipsis:" << params << "\n"; }
 
 private:
   const std::string params;
@@ -47,11 +47,10 @@ int main(int argc, char **argv) {
       Registry<Shape>::New(key)->Draw();
     } else {
       std::cerr << "No '" << key << "' shape registered. Registered are\n";
-      for (const auto &k : Registry<Shape>::GetKeysWithLocations()) {
+      for (const auto &k : Registry<Shape>::GetKeys()) {
         std::cerr << "  " << k << '\n';
       }
-      for (const auto &k :
-           Registry<Shape, const std::string &>::GetKeysWithLocations()) {
+      for (const auto &k : Registry<Shape, const std::string &>::GetKeys()) {
         std::cerr << "  " << k << "(string)\n";
       }
       return -1;

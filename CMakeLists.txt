@@ -15,4 +15,12 @@ add_test(test registerer_test)
 
 add_executable(registerer_example registerer_example.cc)
 add_dependencies(registerer_example registerer)
-add_test(example registerer_example Circle red Rectangle green Ellipsis blue)
+
+add_test(example_work registerer_example Circle red Rectangle green Ellipsis blue)
+set_tests_properties(example_work
+    PROPERTIES PASS_REGULAR_EXPRESSION "Circle\nRectangle\nEllipsis:blue"
+)
+add_test(example_fail registerer_example Unknown yellow)
+set_tests_properties(example_fail
+    PROPERTIES PASS_REGULAR_EXPRESSION "No 'Unknown' shape registered"
+)
