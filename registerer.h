@@ -220,9 +220,9 @@
 #define REGISTER_ALIAS(TYPE, NAME, ALIAS)                                      \
   REGISTER_ALIAS_AT(__LINE__, TYPE, NAME, ALIAS)
 #define REGISTER_ALIAS_AT(LINE, TYPE, NAME, ALIAS)                             \
-  Registry<TYPE>::Injector CONCAT_TOKENS(__injector, LINE)(                    \
-      ALIAS, []() { return Registry<TYPE>::New(NAME).release(); }, __FILE__,   \
-      STRINGIFY(LINE));
+  Registry<TYPE>::Injector CONCAT_TOKENS(_xd_injector, LINE)(ALIAS, []() {     \
+    return Registry<TYPE>::New(NAME).release();                                \
+  }, __FILE__, STRINGIFY(LINE));
 
 namespace factory {
 template <typename T, class... Args> class Registry {
@@ -257,8 +257,8 @@ public:
   // function. If class is not registered, there will be a compile-
   // time failure.
   template <typename C> static const char *GetKeyFor() {
-    return C::__key(static_cast<const T *>(nullptr),
-                    std::function<void(Args...)>());
+    return C::_xd_key(static_cast<const T *>(nullptr),
+                      std::function<void(Args...)>());
   }
 
   // Returns the list of keys registered for the registry.
@@ -326,11 +326,11 @@ public:
   //***************************************************************************
   // Implementation details that can't be made private because used in macros
   //***************************************************************************
-  typedef std::function<T *(Args...)> __function_t;
+  typedef std::function<T *(Args...)> function_t;
 
-  struct __Registerer {
-    __Registerer(__function_t function, const std::string &key,
-                 const char *file, const char *line) {
+  struct Registerer {
+    Registerer(function_t function, const std::string &key, const char *file,
+               const char *line) {
       const Entry entry = {file, line, function};
       registry_mutex_.lock();
       GetRegistry()->insert(std::make_pair(key, entry));
@@ -342,7 +342,7 @@ private:
   struct Entry {
     const char *const file;
     const char *const line;
-    const __function_t function;
+    const function_t function;
   };
   typedef std::map<std::string, Entry> EntryMap;
   // The registry and injectors are created on demand using static variables
@@ -389,34 +389,32 @@ std::mutex Registry<T, Args...>::registry_mutex_;
 template <typename Trait, typename base_type, typename derived_type,
           class... Args>
 struct TypeRegisterer {
-  static const typename Registry<base_type, Args...>::__Registerer instance;
+  static const typename Registry<base_type, Args...>::Registerer instance;
 };
 
 template <typename Trait, typename base_type, typename derived_type,
           class... Args>
-typename Registry<base_type, Args...>::__Registerer const
-    TypeRegisterer<Trait, base_type, derived_type,
-                   Args...>::instance([](Args... args) -> base_type *
-                                      { return new derived_type(args...); },
-                                      Trait::key(), Trait::file(),
-                                      Trait::line());
+typename Registry<base_type, Args...>::Registerer const
+TypeRegisterer<Trait, base_type, derived_type, Args...>::instance(
+    [](Args... args) -> base_type *{ return new derived_type(args...); },
+    Trait::key(), Trait::file(), Trait::line());
 
 #define CONCAT_TOKENS(x, y) x##y
 #define STRINGIFY(x) #x
 
 #define REGISTER_AT(LINE, KEY, TYPE, ARGS...)                                  \
   friend class ::factory::Registry<TYPE, ##ARGS>;                              \
-  struct CONCAT_TOKENS(__Trait, LINE) {                                        \
+  struct CONCAT_TOKENS(_xd_Trait, LINE) {                                      \
     static const char *key() { return KEY; }                                   \
     static const char *file() { return __FILE__; }                             \
     static const char *line() { return STRINGIFY(LINE); }                      \
   };                                                                           \
-  const void *CONCAT_TOKENS(__unused, LINE)() const {                          \
-    return &::factory::TypeRegisterer<CONCAT_TOKENS(__Trait, LINE), TYPE,      \
+  const void *CONCAT_TOKENS(_xd_unused, LINE)() const {                        \
+    return &::factory::TypeRegisterer<CONCAT_TOKENS(_xd_Trait, LINE), TYPE,    \
                                       std::decay<decltype(*this)>::type,       \
                                       ##ARGS>::instance;                       \
   }                                                                            \
-  static const char *__key(const TYPE *, std::function<void(ARGS)>) {          \
+  static const char *_xd_key(const TYPE *, std::function<void(ARGS)>) {        \
     return KEY;                                                                \
   }
 
