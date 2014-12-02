@@ -222,7 +222,8 @@
 #define REGISTER_ALIAS_AT(LINE, TYPE, NAME, ALIAS)                             \
   Registry<TYPE>::Injector CONCAT_TOKENS(_xd_injector, LINE)(ALIAS, []() {     \
     return Registry<TYPE>::New(NAME).release();                                \
-  }, __FILE__, STRINGIFY(LINE));
+  }, __FILE__, STRINGIFY(LINE));                                               \
+  static_assert(true, "") // enforce ; at EOL
 
 namespace factory {
 template <typename T, class... Args> class Registry {
@@ -416,7 +417,8 @@ TypeRegisterer<Trait, base_type, derived_type, Args...>::instance(
   }                                                                            \
   static const char *_xd_key(const TYPE *, std::function<void(ARGS)>) {        \
     return KEY;                                                                \
-  }
+  }                                                                            \
+  static_assert(true, "") // enforce ; at EOL
 
 } // namespace factory
 
