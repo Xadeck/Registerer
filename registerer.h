@@ -397,7 +397,7 @@ template <typename Trait, typename base_type, typename derived_type,
           class... Args>
 const typename Registry<base_type, Args...>::Registerer 
 TypeRegisterer<Trait, base_type, derived_type, Args...>::instance(
-    [](Args... args) -> base_type *{ return new derived_type(args...); },
+    [](Args... args) { return new derived_type(args...); },
     Trait::key(), Trait::file(), Trait::line());
 
 #define CONCAT_TOKENS(x, y) x##y
