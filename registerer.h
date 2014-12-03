@@ -388,13 +388,13 @@ std::mutex Registry<T, Args...>::registry_mutex_;
 // static variable, or it would create an initialization order fiasco.
 //*****************************************************************************
 template <typename Trait, typename base_type, typename derived_type,
-          class... Args>
+          typename... Args>
 struct TypeRegisterer {
   static const typename Registry<base_type, Args...>::Registerer instance;
 };
 
 template <typename Trait, typename base_type, typename derived_type,
-          class... Args>
+          typename... Args>
 const typename Registry<base_type, Args...>::Registerer 
 TypeRegisterer<Trait, base_type, derived_type, Args...>::instance(
     [](Args... args) { return new derived_type(args...); },
