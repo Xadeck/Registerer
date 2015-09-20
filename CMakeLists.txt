@@ -5,7 +5,7 @@ enable_testing()
 include(GMock)
 include(Cxx11)
 
-add_executable(registerer_test registerer_test.cc)
+add_executable(registerer_test registerer_test.cc registerer_test_deps.h registerer_test_deps.cc)
 add_gmock(registerer_test)
 add_test(test registerer_test)
 
